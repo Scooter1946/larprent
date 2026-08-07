@@ -86,10 +86,20 @@ def reseed_bundle(bundle_id: str) -> None:
     seed_bundle(b, world["user_id"])
 
 
-def prefeed() -> str:
+def prefeed(force: bool = False) -> str:
     """--prefeed: feed one KNOWN fact through the exact same remember -> verify -> register path the
     live feed box uses, so the on-stage demo never depends on live extraction. Returns the assigned
-    bundle_id. Idempotent (scoped delete + re-add, reused session_id)."""
+    bundle_id. Idempotent (scoped delete + re-add, reused session_id).
+
+    ORDERING GUARD: must run AFTER the show1 capture (reset_prune.py). The Initech fact's
+    "99.99% uptime SLA" is semantically adjacent to Q5's Northwind SLA — if it sits in EverOS scope
+    during the benchmark it can seat in Q5's context with a CONFLICTING number, breaking the
+    calibration matrix and possibly the 8/8. Isolation is real only if the ordering is."""
+    import os as _os
+    if not _os.path.exists("captures/replay_post_prune.json") and not force:
+        raise SystemExit("prefeed BLOCKED: captures/replay_post_prune.json not found — run the "
+                         "show1 capture (reset_prune.py) BEFORE prefeeding, or pass --force if you "
+                         "know exactly why the ordering doesn't apply (e.g. throwaway rehearsal).")
     world = load_world()
     user_id = world["user_id"]
     try:
@@ -127,7 +137,7 @@ def main():
 
 if __name__ == "__main__":
     if "--prefeed" in sys.argv:
-        prefeed()   # pre-show: register the Initech fallback memory (never touches show1 captures/ledger)
+        prefeed(force="--force" in sys.argv)   # AFTER reset_prune only (ordering guard inside)
     elif "--restore-active" in sys.argv:
         reset_active_all()   # ONLY the active flag — EverOS content, show1 captures, and ledger rows untouched
         print("bundle_registry: all 12 bundles restored to active=TRUE (show1's captures/ledger rows untouched)")

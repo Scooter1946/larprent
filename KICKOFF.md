@@ -34,7 +34,7 @@ calibration, cut line (14:30), and any honesty-rule question. Escalate through L
 | T+0:40 | Lanes split. A: fixtures→schema→ledger. B: `bundles.py` FIRST (A is waiting), then UI skeleton on mock data |
 | T+1:25 | Sync: `bundles.py` handoff → A runs `seed.py`; B starts leaderboard for real |
 | T+2:45 | A: benchmark both arms → calibration report matches the designed matrix (supervisor reviews) |
-| T+3:15 | A: prune → post-capture → receipts snapshot → **`seed.py --restore-active`** (never skip). Captures committed |
+| T+3:15 | A: prune → post-capture → receipts snapshot → **`seed.py --restore-active`** → **`seed.py --prefeed`** (STRICTLY in this order — prefeed before the capture poisons Q5's retrieval). Captures committed |
 | T-0:45 | B: final wire pass to real captures; `check_demo.py` green; supervisor reviews the freeze |
 | T-0:20 | Rehearse twice: once `--replay`, once live. Freeze. Submit with buffer |
 
