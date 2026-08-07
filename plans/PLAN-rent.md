@@ -939,3 +939,19 @@ Grading: `rent_fixtures.normalize(model_answer) == rent_fixtures.normalize(gold_
 
 **"Why didn't quality drop after pruning?"** Because the prune rule structurally cannot touch a bundle that's a supporting bundle for ANY question in the fixture — that's a global exclusion in the SQL (`NOT EXISTS` against `fixture_support_map`), not just a check against this run's history. Both arms hit 8/8 before AND after pruning, and `check_demo.py` doesn't just trust the capture files — it also queries live Snowflake to confirm `show1`'s rows and pruned registry state are still there, not reset away.
 
+
+**"So the eval is what saves the tokens?"** No — the eval doesn't save tokens; it tells you which
+memories are wasting them. The PRUNE saves tokens — on every call, forever: retrieval stops seating
+the pruned memories, the no-backfill rule keeps their seats empty, so every future live prompt is
+smaller. The eval is the audit that makes the prune safe (same score, with evidence instead of
+vibes). Audits don't make money; closing the money-losing stores does.
+
+**"That's your eval set — what about my real traffic?"** Rent already meters on ANY live prompt, no
+ground truth needed. Earnings need an outcome signal plus a counterfactual; the demo uses a fixed
+eval because that's provable in a 3-minute window — every number on screen is measured, not
+modeled. In production the same ledger runs on your real outcome signals (thumbs up/down, task
+completion, did-the-user-re-ask) with a sampled naive baseline. The ledger's inputs are pluggable;
+the accounting doesn't change.
+
+**Pitch spine, one line:** costs accrue live, earnings accrue on evidence — every memory pays rent
+from the day it's born, and has to prove it earned its seat.
