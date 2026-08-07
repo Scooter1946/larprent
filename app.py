@@ -322,6 +322,14 @@ def render_receipts(replay_mode: bool) -> None:
         st.markdown(f'<div class="rent-panel rent-foot">receipts unavailable ({e}).</div>',
                     unsafe_allow_html=True)
         return
+    # Local-backend snapshots hold a note row, not receipt rows (ACCOUNT_USAGE is Snowflake-only).
+    # Render the honest note instead of KeyError-ing mid-demo.
+    if not receipts or "start_time" not in receipts[0]:
+        note = (receipts[0].get("note") if receipts and isinstance(receipts[0], dict) else None) or \
+               "billed-credits receipts exist only on the Snowflake backend"
+        st.markdown(f'<div class="rent-panel rent-foot">{note} — run with RENT_BACKEND=snowflake '
+                    f'for the metering receipts panel.</div>', unsafe_allow_html=True)
+        return
     rows_html = "".join(
         f'<tr><td class="l">{r["start_time"]}</td><td class="l">{r["model_name"]}</td>'
         f'<td class="l">{r["query_tag"]}</td><td>{r["credits"]:.6f}</td></tr>' for r in receipts)
