@@ -55,6 +55,15 @@ non-negotiable.
    what a `st.markdown` HTML/CSS/JS block can do. Do NOT restyle the app wholesale — the Rent
    Terminal Dark palette stays.
 
+6. **Fire-buttons (audience picks the victim, ~10 lines)**: in the "Not paying rent" red panel,
+   render a small `FIRE B09` / `FIRE B10` button on each candidate row (in BOTH modes) alongside the
+   existing all-at-once PRUNE. A fire-button prunes ONLY that bundle (live: `bundles.apply_prune([bid])`;
+   replay: add the bid to a `st.session_state["pruned_ids"]` set that compute_local_ledger's
+   pruned_ids union with the frozen file). Both candidates are support-map-guarded decoys, so any
+   audience choice is safe — the presenter asks the room which one dies first. The all-PRUNE button
+   stays as the "fire the rest" follow-up. Cost tiles logic unchanged (they still compare the frozen
+   pre/post captures).
+
 ## Demo-script placement (update the two lines in plans/PLAN-rent.md's demo script if needed)
 The beat runs ~1:00–1:30: feed → "memory born" panel → freeform query answers from it → its first
 rent chip appears → "every memory starts life in the red — it has to earn its seat. These two never
