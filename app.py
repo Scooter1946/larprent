@@ -33,6 +33,7 @@ import bundles
 import ledger
 import mem      # lifecycle beat: live feed box (remember + verify-loop)
 import seed     # lifecycle beat: upsert_live_bundle + pre-fed fallback constants
+import snow     # footer: active backend/LLM disclosure
 from rent_fixtures import load_world, normalize
 from benchmark import MODEL, GEN_PARAMS, USER_ID, ENC, SYSTEM_PROMPT, build_naive_prompt  # reused, not duplicated
 from snow import ai_complete, get_conn, MODEL_RATES, USD_PER_CREDIT
@@ -340,6 +341,8 @@ def render_footer() -> None:
       per-snippet token count isn't exposed by AI_COMPLETE, so each bundle's rent is an estimate of
       its share of the measured total, at claude-haiku-4-5's published rate ($0.35/M-token credits
       &times; $2.00/credit).
+      <br>Active backend: <b style="color:{TEXT}">{snow.BACKEND}</b> / LLM: <b style="color:{TEXT}">{snow.LLM}</b>{
+      " — mock is a pipeline-test model (tiktoken-estimated tokens); demo with a real LLM backend." if snow.LLM == "mock" else ""}
     </div>""", unsafe_allow_html=True)
 
 

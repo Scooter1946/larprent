@@ -7,10 +7,23 @@ The connector does not run multi-statement strings by default, so every DDL
 statement is its own cur.execute().
 """
 from dotenv import load_dotenv; load_dotenv()
-import os, snowflake.connector
+import os
+
+import snow
 
 
 def main():
+    if snow.BACKEND == "local":
+        # Local backend: no database/warehouse ceremony — one shim connection creates llm_call_log.
+        conn = snow.get_conn()
+        conn.cursor().execute("""CREATE TABLE IF NOT EXISTS llm_call_log (
+          call_id STRING DEFAULT UUID_STRING(), ts TIMESTAMP_LTZ DEFAULT CURRENT_TIMESTAMP(),
+          model STRING, purpose STRING, prompt_tokens INT, completion_tokens INT,
+          latency_ms INT, credits_est FLOAT, user_id STRING, session_id STRING, extra VARIANT)""")
+        conn.commit()
+        print(f"bootstrap OK (LOCAL backend): {snow.LOCAL_DB} ready, llm_call_log created")
+        return
+    import snowflake.connector
     # Step A: raw connection, database/schema do NOT exist yet
     conn = snowflake.connector.connect(user=os.environ["SNOWFLAKE_USER"], password=os.environ["SNOWFLAKE_PAT"],
                                         account=os.environ["SNOWFLAKE_ACCOUNT"], warehouse="COMPUTE_WH")

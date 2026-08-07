@@ -18,14 +18,19 @@ def load_statements(path: str = "rent_schema.sql") -> list[str]:
 
 
 def main():
+    import snow
     conn = get_conn(); cur = conn.cursor()
     statements = load_statements()
     for stmt in statements:
         cur.execute(stmt)
     conn.commit()
-    cur.execute("""SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-                   WHERE TABLE_SCHEMA='PUBLIC' AND TABLE_NAME IN
-                   ('BUNDLE_REGISTRY','FIXTURE_SUPPORT_MAP','EVAL_RESULTS','RETRIEVAL_LOG','RENT_LEDGER')""")
+    if snow.BACKEND == "local":
+        cur.execute("""SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND lower(name) IN
+                       ('bundle_registry','fixture_support_map','eval_results','retrieval_log','rent_ledger')""")
+    else:
+        cur.execute("""SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+                       WHERE TABLE_SCHEMA='PUBLIC' AND TABLE_NAME IN
+                       ('BUNDLE_REGISTRY','FIXTURE_SUPPORT_MAP','EVAL_RESULTS','RETRIEVAL_LOG','RENT_LEDGER')""")
     n = cur.fetchone()[0]
     print(f"rent schema: executed {len(statements)} statements, {n} rent tables present")
     assert n == 5, f"expected 5 rent tables, found {n}"

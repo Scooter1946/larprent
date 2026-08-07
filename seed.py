@@ -25,14 +25,21 @@ PREFEED_SESSION = "prefed-initech"
 
 
 def upsert_registry_row(bundle: dict, session_id: str) -> None:
+    import snow
     conn = get_conn(); cur = conn.cursor()
-    cur.execute("""MERGE INTO bundle_registry t USING (SELECT %(bid)s AS bundle_id) s
-        ON t.bundle_id = s.bundle_id
-        WHEN MATCHED THEN UPDATE SET session_id=%(sid)s, title=%(title)s, category=%(cat)s, is_idle=%(idle)s
-        WHEN NOT MATCHED THEN INSERT (bundle_id, session_id, title, category, is_idle)
-          VALUES (%(bid)s,%(sid)s,%(title)s,%(cat)s,%(idle)s)""",
-        {"bid": bundle["bundle_id"], "sid": session_id, "title": bundle["title"],
-         "cat": bundle["category"], "idle": bundle["is_idle"]})
+    params = {"bid": bundle["bundle_id"], "sid": session_id, "title": bundle["title"],
+              "cat": bundle["category"], "idle": bundle["is_idle"]}
+    if snow.BACKEND == "local":   # SQLite has no MERGE; same semantics via upsert
+        cur.execute("""INSERT INTO bundle_registry (bundle_id, session_id, title, category, is_idle)
+            VALUES (%(bid)s,%(sid)s,%(title)s,%(cat)s,%(idle)s)
+            ON CONFLICT(bundle_id) DO UPDATE SET session_id=excluded.session_id, title=excluded.title,
+              category=excluded.category, is_idle=excluded.is_idle""", params)
+    else:
+        cur.execute("""MERGE INTO bundle_registry t USING (SELECT %(bid)s AS bundle_id) s
+            ON t.bundle_id = s.bundle_id
+            WHEN MATCHED THEN UPDATE SET session_id=%(sid)s, title=%(title)s, category=%(cat)s, is_idle=%(idle)s
+            WHEN NOT MATCHED THEN INSERT (bundle_id, session_id, title, category, is_idle)
+              VALUES (%(bid)s,%(sid)s,%(title)s,%(cat)s,%(idle)s)""", params)
     conn.commit()
 
 
