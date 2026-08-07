@@ -29,7 +29,8 @@ def main():
     cur.execute("SELECT COUNT(*) FROM rent_ledger WHERE run_id='show1'")
     assert cur.fetchone()[0] > 0, "show1 rows missing from Snowflake — was a destructive reset run after capture?"
     cur.execute("SELECT active FROM bundle_registry WHERE bundle_id IN ('B09','B10')")
-    assert all(r[0] is True for r in cur.fetchall()), \
+    # bool(): SQLite returns 1 where Snowflake returns True — same truth, different dialect
+    assert all(bool(r[0]) for r in cur.fetchall()), \
         "B09/B10 are not active — run `python seed.py --restore-active` (Task 7) so the live PRUNE click has a real transition to perform, then rerun this check"
     print(f"check_demo OK: pre_mean={pre_mean:.1f} tok, post_mean={post_mean:.1f} tok, show1 rows verified live, B09/B10 staged ACTIVE")
 

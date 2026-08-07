@@ -51,18 +51,23 @@ def _normalize_episode(ep) -> dict:
 
 
 def remember(session_id: str, messages: list[dict]) -> None:
-    """add() ALWAYS immediately followed by flush() — never skip flush, async extraction otherwise
-    leaves a live search returning nothing."""
+    """add(async_mode=False) ALWAYS immediately followed by flush() — never skip flush.
+    DRY-RUN FINDING (2026-08-07, verified live): EverOS extraction DECLINES single terse messages
+    (flush returns status='no_extraction'); it extracts reliably only from multi-turn conversations
+    (status='extracted', retrievable ~2s later). Callers must pass a conversation — see
+    seed.wrap_conversation(). Also: what's stored is a SUMMARY REWRITE, not verbatim text —
+    retrieval matches against the summary."""
     client = _get_client()
-    client.add(session_id, messages)
+    client.add(session_id, messages, async_mode=False)
     client.flush(session_id)
 
 
-def recall(query: str, user_id: str, top_k: int = 10, min_score: float | None = None) -> list[dict]:
+def recall(query: str, user_id: str, top_k: int = 10, min_score: float | None = None,
+           method: str = "keyword") -> list[dict]:
     """Hybrid search scoped to a user; returns normalized dicts (NOT the raw SearchData). `min_score`,
     when not None, is a calibration gate passed through to search() (EverOS v2 search supports
     min_score)."""
-    kwargs = {"top_k": top_k, "method": "hybrid"}
+    kwargs = {"top_k": top_k, "method": method}   # keyword default: vector/hybrid index drops embeddings (verified live 2026-08-07)
     if min_score is not None:
         kwargs["min_score"] = min_score
     result = _get_client().search(query, user_id=user_id, **kwargs)

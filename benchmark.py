@@ -14,11 +14,11 @@ import argparse, hashlib, json, time, uuid
 import jsonschema, tiktoken
 from dotenv import load_dotenv; load_dotenv()
 from snow import ai_complete, get_conn
-from bundles import recall_bundles
+from bundles import recall_bundles, TOP_K_DEFAULT
 from rent_fixtures import load_world, normalize, USER_ID
 import ledger
 
-MODEL, TOP_K, CAP = "claude-haiku-4-5", 6, 8000   # fallback: openai-gpt-5-mini (Phase 0 step 7)
+MODEL, TOP_K, CAP = "claude-haiku-4-5", TOP_K_DEFAULT, 8000   # single source: bundles.TOP_K_DEFAULT   # fallback: openai-gpt-5-mini (Phase 0 step 7)
 GEN_PARAMS = {"temperature": 0, "max_tokens": 40}
 ENC = tiktoken.get_encoding("cl100k_base")
 SYSTEM_PROMPT = ("You are Acme's internal support/ops assistant. Answer using ONLY the context "
@@ -114,12 +114,15 @@ def save_receipts_snapshot(run_id: str) -> None:
     """Captures the billed-credits tier to a STATIC file so REPLAY_MODE's receipts panel (Task 8/9)
     never queries Snowflake — this is what makes replay genuinely offline for all three cost tiers,
     not just the leaderboard. ~5 min metering lag: call this LAST in Task 7's sequence."""
-    cur = get_conn().cursor()
-    cur.execute("""SELECT start_time, model_name, query_tag, credits
-                   FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY
-                   WHERE query_tag LIKE %s ORDER BY start_time DESC LIMIT 20""", (f"{run_id}%",))
-    rows = [{"start_time": str(r[0]), "model_name": r[1], "query_tag": r[2], "credits": float(r[3])}
-            for r in cur.fetchall()]
+    try:
+        cur = get_conn().cursor()
+        cur.execute("""SELECT start_time, model_name, query_tag, credits
+                       FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY
+                       WHERE query_tag LIKE %s ORDER BY start_time DESC LIMIT 20""", (f"{run_id}%",))
+        rows = [{"start_time": str(r[0]), "model_name": r[1], "query_tag": r[2], "credits": float(r[3])}
+                for r in cur.fetchall()]
+    except Exception as e:  # noqa: BLE001 — local backend has no ACCOUNT_USAGE; snapshot stays honest-empty
+        rows = [{"note": f"billed-credits receipts exist only on the Snowflake backend ({e})"}]
     json.dump(rows, open("fixtures/receipts_snapshot.json", "w"), indent=2)
     print(f"receipts snapshot: {len(rows)} rows -> fixtures/receipts_snapshot.json")
 

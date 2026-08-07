@@ -42,10 +42,11 @@ def check_model() -> None:
 def check_memory() -> None:
     print("[2/2] EverOS remember -> recall round trip ...")
     try:
+        from seed import wrap_conversation   # extraction needs a conversation (dry-run finding)
         mem.remember(
             session_id=SMOKE_SESSION,
-            messages=[{"sender_id": SMOKE_USER, "role": "user",
-                       "content": "Smoke fact: the launch code for the demo is teal-otter-1946."}],
+            messages=wrap_conversation(SMOKE_USER, "demo access",
+                                        "The launch code for the demo is teal-otter-1946."),
         )
         hits = mem.recall("what is the demo launch code", user_id=SMOKE_USER, top_k=10)
         print(f"  recalled {len(hits)} episode(s); first={hits[0] if hits else None}")

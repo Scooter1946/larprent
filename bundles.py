@@ -11,11 +11,11 @@ import os
 import mem
 from snow import get_conn
 
-TOP_K_DEFAULT, OVERFETCH_PAD = 6, 4   # pad only absorbs duplicate episodes of the SAME session; never a backfill source
+TOP_K_DEFAULT, OVERFETCH_PAD = 2, 4   # calibrated 2026-08-07: designed seats are rank 1-2, strays rank 3+   # pad only absorbs duplicate episodes of the SAME session; never a backfill source
 # Day-of calibration knob — tune via ledger.get_calibration_report() until the retrieval matrix
 # matches EXPECTED_RETRIEVAL exactly; set via env RENT_MIN_SCORE, no code edit needed. If the score
 # scale makes a fixed threshold awkward, lowering TOP_K_DEFAULT is the fallback.
-MIN_SCORE = float(os.environ.get("RENT_MIN_SCORE", "0.35"))
+MIN_REL = float(os.environ.get("RENT_MIN_REL", "0.75"))   # calibrated 2026-08-07 on keyword scores: designed 2nd seats ratio >=0.81, strays <=0.68
 
 
 def get_session_to_bundle_map() -> dict[str, dict]:
@@ -28,7 +28,15 @@ def get_session_to_bundle_map() -> dict[str, dict]:
 def recall_bundles(query: str, user_id: str, top_k: int = TOP_K_DEFAULT) -> list[dict]:
     # IMPORTANT: with only 12 bundles and no gate, every question seats top_k bundles and the
     # calibration matrix/idle-column/candidate-set all break — the gate is what makes retrieval sparse.
-    hits = mem.recall(query, user_id=user_id, top_k=top_k + OVERFETCH_PAD, min_score=MIN_SCORE)   # list[dict], already normalized by mem.py's adapter
+    # CLIENT-SIDE RELATIVE gate (never the API's min_score param — it returns empty sets, verified
+    # live 2026-08-07 6/6 repro). Relative-to-rank-1 is scale-free: keyword scores are BM25-scale,
+    # vector/hybrid 0..1, and EverOS has changed scales between reindexes — a fraction of top score
+    # survives all of that. Retrieval method is KEYWORD: the vector index silently dropped 4 of 12
+    # embeddings mid-dry-run while keyword stayed exact (data was never lost — get() showed all 12).
+    hits = mem.recall(query, user_id=user_id, top_k=top_k + OVERFETCH_PAD)   # list[dict], normalized by mem.py's adapter
+    if hits:
+        top = max(h["score"] or 0 for h in hits)
+        hits = [h for h in hits if (h["score"] or 0) >= MIN_REL * top] if top > 0 else hits
     reg = get_session_to_bundle_map()
     seen, frozen_seats = set(), []
     for rank, ep in enumerate(hits, start=1):

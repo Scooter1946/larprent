@@ -2,39 +2,185 @@
   "world": "acme_saas_v1",
   "user_id": "acme:support",
   "bundles": [
-    {"bundle_id": "B01", "title": "Kanban Board v3 launch", "category": "product_spec", "is_idle": false,
-     "content": "Acme's redesigned Kanban board shipped to all plans on 2026-01-15. The new board adds drag-and-drop swimlanes, per-column WIP limits, and configurable swimlane color-coding. Existing boards on the legacy list view were auto-migrated overnight, and no customer action was required. The WIP-limit warning banner is enabled by default for every workspace."},
-    {"bundle_id": "B02", "title": "Automations Engine limits", "category": "product_spec", "is_idle": false,
-     "content": "Acme's automations engine runs on a trigger, condition, and action model that customers configure without code. The Team plan allows up to 60 automation runs per minute, while the Starter plan is capped at 15 runs per minute and the Enterprise plan has no cap. Each automation can chain up to 5 actions in sequence. Automation history is retained for 30 days on every plan."},
-    {"bundle_id": "B03", "title": "2026 Plan Overhaul", "category": "pricing_history", "is_idle": false,
-     "content": "Acme restructured its pricing plans effective 2026-01-01. The new Starter plan is $19 per month, the new Team plan is $79 per month, and Enterprise pricing remains custom and quote-based. Before the overhaul the equivalent plans were Starter $15, Pro $59, and Business $149. Customers on the old plans were grandfathered at their existing rate for 90 days after the change."},
-    {"bundle_id": "B04", "title": "Enterprise SSO add-on", "category": "pricing_history", "is_idle": false,
-     "content": "Single sign-on via SAML and SCIM is sold as an add-on exclusively on Acme's Enterprise plan. The SSO add-on costs $199 per month, billed separately from the base per-seat price. Turning it on requires a dedicated onboarding call with Acme's solutions team to configure the identity provider. SSO cannot currently be purchased on the Starter or Team plans."},
-    {"bundle_id": "B05", "title": "Northwind Traders SLA", "category": "customer_quirk", "is_idle": false,
-     "content": "Northwind Traders is a 400-seat logistics customer that negotiated a custom uptime SLA outside Acme's standard terms. Their contract guarantees 99.95% uptime, above Acme's standard 99.9% SLA, with financial penalties if Acme falls short. The Northwind contract renews every March and is managed directly by Acme's enterprise account team. Northwind's primary contact is their logistics operations director."},
-    {"bundle_id": "B06", "title": "Globex Corp residency", "category": "customer_quirk", "is_idle": false,
-     "content": "Globex Corp's contract includes a data residency addendum requiring all of their account data to remain in the EU region. Acme's default data residency for new accounts is US-East unless a customer explicitly negotiates an override like Globex did. Globex Corp's account owner on their side is Priya Nair, VP of IT. The EU residency requirement was a condition of Globex signing their original contract."},
-    {"bundle_id": "B07", "title": "2025-11-02 Search Outage", "category": "incident_postmortem", "is_idle": false,
-     "content": "On 2025-11-02, a bad index migration took Acme's full-text search offline for 47 minutes, from 14:02 to 14:49 UTC. The root cause was an unbounded reindex job that exhausted memory on the search cluster. The incident was resolved by rolling back the migration and adding a hard memory cap to future reindex jobs. No customer data was lost, and the postmortem was published within 48 hours."},
-    {"bundle_id": "B08", "title": "2026-02-14 Billing Double-Charge", "category": "incident_postmortem", "is_idle": false,
-     "content": "On 2026-02-14, a retry-logic bug in Acme's Stripe webhook handler double-charged 312 customers. All duplicate charges were automatically refunded within 24 hours of detection. The postmortem action item added idempotency keys to the webhook handler so retries can no longer create duplicate charges. Acme's billing team also added a daily reconciliation job to catch similar issues faster in the future."},
-    {"bundle_id": "B09", "title": "Product FAQ (general overview)", "category": "product_spec", "is_idle": false,
-     "content": "Acme's product FAQ describes the Kanban board and the automations engine in general marketing language for prospective customers. It says the board is fast and flexible and that automations run automatically to save teams time. The FAQ does not list a launch date for any board version, and it does not state how many automation runs per minute any plan allows. It links out to the full changelog for customers who want exact figures."},
-    {"bundle_id": "B10", "title": "External Pricing One-Pager", "category": "pricing_history", "is_idle": false,
-     "content": "Acme's external marketing one-pager summarizes plan pricing for prospective customers in broad strokes. It says plans start at $15 per month and mentions that single sign-on is available on the Enterprise plan without listing its price. The one-pager was written before Acme's 2026 pricing overhaul and has not been updated since. Acme's sales team occasionally still links to it by mistake when a prospect asks about pricing."},
-    {"bundle_id": "B11", "title": "Team Lunch Potluck Sign-Up", "category": "idle", "is_idle": true,
-     "content": "The Tuesday team lunch potluck sign-up sheet is posted on the breakroom whiteboard every week. This week's theme is 'bring a dish from where you grew up,' and eleven people have signed up so far. Whoever is bringing a hot dish should label it with reheating instructions. Leftovers go in the shared fridge and are first-come, first-served on Wednesday morning."},
-    {"bundle_id": "B12", "title": "Parking Garage Repaving Schedule", "category": "idle", "is_idle": true,
-     "content": "The parking garage next to the office building will have its top two levels repaved starting next Monday. Employees who normally park on levels three and four should use the overflow lot two blocks north for the week. Building management sent a reminder email with a map of the overflow lot and its access hours. The repaving is expected to finish by the following Friday, weather permitting."}
+    {
+      "bundle_id": "B01",
+      "title": "Kanban Board v3 launch",
+      "category": "product_spec",
+      "is_idle": false,
+      "content": "Acme's redesigned Kanban board shipped to all plans on 2026-01-15. The new board adds drag-and-drop swimlanes, per-column WIP limits, and configurable swimlane color-coding. Existing boards on the legacy list view were auto-migrated overnight, and no customer action was required. The WIP-limit warning banner is enabled by default for every workspace."
+    },
+    {
+      "bundle_id": "B02",
+      "title": "Automations Engine limits",
+      "category": "product_spec",
+      "is_idle": false,
+      "content": "Acme's automations engine runs on a trigger, condition, and action model that customers configure without code. The Team plan allows up to 60 automation runs per minute, while the Starter plan is capped at 15 runs per minute and the Enterprise plan has no cap. Each automation can chain up to 5 actions in sequence. Automation history is retained for 30 days on every plan."
+    },
+    {
+      "bundle_id": "B03",
+      "title": "2026 Plan Overhaul",
+      "category": "pricing_history",
+      "is_idle": false,
+      "content": "Acme restructured its pricing plans effective 2026-01-01. The new Starter plan is $19 per month, the new Team plan is $79 per month, and Enterprise pricing remains custom and quote-based. Before the overhaul the equivalent plans were Starter $15, Pro $59, and Business $149. Customers on the old plans were grandfathered at their existing rate for 90 days after the change."
+    },
+    {
+      "bundle_id": "B04",
+      "title": "Enterprise SSO add-on",
+      "category": "pricing_history",
+      "is_idle": false,
+      "content": "Single sign-on via SAML and SCIM is sold as an add-on exclusively on Acme's Enterprise plan. The SSO add-on costs $199 per month, billed separately from the base per-seat price. Turning it on requires a dedicated onboarding call with Acme's solutions team to configure the identity provider. SSO cannot currently be purchased on the Starter or Team plans."
+    },
+    {
+      "bundle_id": "B05",
+      "title": "Northwind Traders SLA",
+      "category": "customer_quirk",
+      "is_idle": false,
+      "content": "Northwind Traders is a 400-seat logistics customer that negotiated a custom uptime SLA outside Acme's standard terms. Their contract guarantees 99.95% uptime, above Acme's standard 99.9% SLA, with financial penalties if Acme falls short. The Northwind contract renews every March and is managed directly by Acme's enterprise account team. Northwind's primary contact is their logistics operations director."
+    },
+    {
+      "bundle_id": "B06",
+      "title": "Globex Corp residency",
+      "category": "customer_quirk",
+      "is_idle": false,
+      "content": "Globex Corp's contract includes a data residency addendum requiring all of their account data to remain in the EU region. Acme's default data residency for new accounts is US-East unless a customer explicitly negotiates an override like Globex did. Globex Corp's account owner on their side is Priya Nair, VP of IT. The EU residency requirement was a condition of Globex signing their original contract."
+    },
+    {
+      "bundle_id": "B07",
+      "title": "2025-11-02 Search Outage",
+      "category": "incident_postmortem",
+      "is_idle": false,
+      "content": "On 2025-11-02, a bad index migration took Acme's full-text search offline for 47 minutes, from 14:02 to 14:49 UTC. The root cause was an unbounded reindex job that exhausted memory on the search cluster. The incident was resolved by rolling back the migration and adding a hard memory cap to future reindex jobs. No customer data was lost, and the postmortem was published within 48 hours."
+    },
+    {
+      "bundle_id": "B08",
+      "title": "2026-02-14 Billing Double-Charge",
+      "category": "incident_postmortem",
+      "is_idle": false,
+      "content": "On 2026-02-14, a retry-logic bug in Acme's Stripe webhook handler double-charged 312 customers. All duplicate charges were automatically refunded within 24 hours of detection. The postmortem action item added idempotency keys to the webhook handler so retries can no longer create duplicate charges. Acme's billing team also added a daily reconciliation job to catch similar issues faster in the future."
+    },
+    {
+      "bundle_id": "B09",
+      "title": "Product FAQ (general overview)",
+      "category": "product_spec",
+      "is_idle": false,
+      "content": "Acme's product FAQ describes the Kanban board and the automations engine in general marketing language for prospective customers. It says the board is fast and flexible and that automations run automatically to save teams time. The FAQ does not list a launch date for any board version, and it does not state how many automation runs per minute any plan allows. It links out to the full changelog for customers who want exact figures."
+    },
+    {
+      "bundle_id": "B10",
+      "title": "External Pricing One-Pager",
+      "category": "pricing_history",
+      "is_idle": false,
+      "content": "Acme's external marketing one-pager summarizes plan pricing for prospective customers in broad strokes. It says plans start at $15 per month and mentions that the SSO add-on (single sign-on) is available on the Enterprise plan per month without listing the add-on cost. The one-pager was written before Acme's 2026 pricing overhaul and has not been updated since. Acme's sales team occasionally still links to it by mistake when a prospect asks about pricing."
+    },
+    {
+      "bundle_id": "B11",
+      "title": "Team Lunch Potluck Sign-Up",
+      "category": "idle",
+      "is_idle": true,
+      "content": "The Tuesday team lunch potluck sign-up sheet is posted on the breakroom whiteboard every week. This week's theme is 'bring a dish from where you grew up,' and eleven people have signed up so far. Whoever is bringing a hot dish should label it with reheating instructions. Leftovers go in the shared fridge and are first-come, first-served on Wednesday morning."
+    },
+    {
+      "bundle_id": "B12",
+      "title": "Parking Garage Repaving Schedule",
+      "category": "idle",
+      "is_idle": true,
+      "content": "The parking garage next to the office building will have its top two levels repaved starting next Monday. Employees who normally park on levels three and four should use the overflow lot two blocks north for the week. Building management sent a reminder email with a map of the overflow lot and its access hours. The repaving is expected to finish by the following Friday, weather permitting."
+    }
   ],
   "questions": [
-    {"question_id": "Q1", "query": "What date did Acme's Kanban Board v3 launch?", "gold_answer": ["2026-01-15", "January 15, 2026", "January 15 2026"], "supporting_bundle_ids": ["B01"]},
-    {"question_id": "Q2", "query": "How many automation runs per minute does the Team plan allow?", "gold_answer": ["60", "60 runs per minute", "60 per minute"], "supporting_bundle_ids": ["B02"]},
-    {"question_id": "Q3", "query": "What is the monthly price of Acme's Team plan after the 2026 pricing overhaul?", "gold_answer": ["$79", "$79 per month", "$79/month"], "supporting_bundle_ids": ["B03"]},
-    {"question_id": "Q4", "query": "How much does Acme's Enterprise SSO add-on cost per month?", "gold_answer": ["$199", "$199 per month", "$199/month"], "supporting_bundle_ids": ["B04"]},
-    {"question_id": "Q5", "query": "What uptime SLA percentage did Acme commit to for Northwind Traders?", "gold_answer": ["99.95%", "99.95"], "supporting_bundle_ids": ["B05"]},
-    {"question_id": "Q6", "query": "Which data residency region is contractually required for Globex Corp's account?", "gold_answer": ["EU", "the EU", "EU region", "the EU region"], "supporting_bundle_ids": ["B06"]},
-    {"question_id": "Q7", "query": "How long did the 2025-11-02 search outage last?", "gold_answer": ["47 minutes", "47"], "supporting_bundle_ids": ["B07"]},
-    {"question_id": "Q8", "query": "How many customers were affected by the 2026-02-14 billing double-charge incident?", "gold_answer": ["312", "312 customers"], "supporting_bundle_ids": ["B08"]}
+    {
+      "question_id": "Q1",
+      "query": "What date did Acme's Kanban Board v3 launch?",
+      "gold_answer": [
+        "2026-01-15",
+        "January 15, 2026",
+        "January 15 2026"
+      ],
+      "supporting_bundle_ids": [
+        "B01"
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "query": "How many automation runs per minute does the Team plan allow?",
+      "gold_answer": [
+        "60",
+        "60 runs per minute",
+        "60 per minute"
+      ],
+      "supporting_bundle_ids": [
+        "B02"
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "query": "What is the monthly price of Acme's Team plan after the 2026 pricing overhaul?",
+      "gold_answer": [
+        "$79",
+        "$79 per month",
+        "$79/month"
+      ],
+      "supporting_bundle_ids": [
+        "B03"
+      ]
+    },
+    {
+      "question_id": "Q4",
+      "query": "How much does Acme's Enterprise SSO add-on cost per month?",
+      "gold_answer": [
+        "$199",
+        "$199 per month",
+        "$199/month"
+      ],
+      "supporting_bundle_ids": [
+        "B04"
+      ]
+    },
+    {
+      "question_id": "Q5",
+      "query": "What uptime SLA percentage did Acme commit to for Northwind Traders?",
+      "gold_answer": [
+        "99.95%",
+        "99.95"
+      ],
+      "supporting_bundle_ids": [
+        "B05"
+      ]
+    },
+    {
+      "question_id": "Q6",
+      "query": "Which data residency region is contractually required for Globex Corp's account?",
+      "gold_answer": [
+        "EU",
+        "the EU",
+        "EU region",
+        "the EU region"
+      ],
+      "supporting_bundle_ids": [
+        "B06"
+      ]
+    },
+    {
+      "question_id": "Q7",
+      "query": "How long did the 2025-11-02 search outage last?",
+      "gold_answer": [
+        "47 minutes",
+        "47"
+      ],
+      "supporting_bundle_ids": [
+        "B07"
+      ]
+    },
+    {
+      "question_id": "Q8",
+      "query": "How many customers were affected by the 2026-02-14 billing double-charge incident?",
+      "gold_answer": [
+        "312",
+        "312 customers"
+      ],
+      "supporting_bundle_ids": [
+        "B08"
+      ]
+    }
   ]
 }

@@ -12,6 +12,8 @@ session_id <-> bundle_id and holds the only mutable state (active).
 """
 from dotenv import load_dotenv; load_dotenv()
 import sys
+import time
+
 import mem
 from bundles import reset_active_all
 from rent_fixtures import load_world
@@ -71,6 +73,21 @@ def upsert_live_bundle(session_id: str, title: str) -> str:
     return bundle_id
 
 
+def wrap_conversation(user_id: str, title: str, content: str) -> list[dict]:
+    """EverOS extraction declines single terse messages (dry-run finding, see mem.remember) — it
+    needs a real conversation. Wrap any fact/document in a minimal 4-turn exchange, with the
+    assistant echoing the key facts so they survive the summary rewrite EverOS stores."""
+    return [
+        {"sender_id": user_id, "role": "user",
+         "content": f"Let me put this on the record so we don't lose it: {title}."},
+        {"sender_id": "assistant", "role": "assistant",
+         "content": "Go ahead — I'll remember the details."},
+        {"sender_id": user_id, "role": "user", "content": content},
+        {"sender_id": "assistant", "role": "assistant",
+         "content": f"Noted. Key facts recorded for {title}: {content[:200]}"},
+    ]
+
+
 def seed_bundle(bundle: dict, user_id: str) -> None:
     session_id = f"acme-bundle-{bundle['bundle_id']}"
     try:
@@ -78,10 +95,15 @@ def seed_bundle(bundle: dict, user_id: str) -> None:
     except Exception:
         pass   # first run: nothing to delete yet, ignore
     mem.remember(session_id=session_id,
-                 messages=[{"sender_id": user_id, "role": "user", "content": bundle["content"]}])
-    episodes = mem.recall(bundle["title"], user_id=user_id, top_k=12)   # list[dict] — Phase 0 adapter
-    if not any(ep["session_id"] == session_id for ep in episodes):
-        raise RuntimeError(f"seed verify FAILED for {bundle['bundle_id']}: not retrievable after flush")
+                 messages=wrap_conversation(user_id, bundle["title"], bundle["content"]))
+    # Indexing lands ~2s AFTER a successful flush (dry-run finding) — poll briefly, don't fail instantly.
+    for wait in (0, 2, 4, 6):
+        time.sleep(wait)
+        episodes = mem.recall(bundle["title"], user_id=user_id, top_k=12)   # list[dict] — Phase 0 adapter
+        if any(ep["session_id"] == session_id for ep in episodes):
+            break
+    else:
+        raise RuntimeError(f"seed verify FAILED for {bundle['bundle_id']}: not retrievable after flush+12s")
     upsert_registry_row(bundle, session_id)
 
 
@@ -114,7 +136,7 @@ def prefeed(force: bool = False) -> str:
     except Exception:
         pass
     mem.remember(session_id=PREFEED_SESSION,
-                 messages=[{"sender_id": user_id, "role": "user", "content": PREFEED_FACT}])
+                 messages=wrap_conversation(user_id, "Initech contract", PREFEED_FACT))
     episodes = mem.recall(PREFEED_FACT, user_id=user_id, top_k=12)
     if not any(ep["session_id"] == PREFEED_SESSION for ep in episodes):
         raise RuntimeError("prefeed verify FAILED: Initech memory not retrievable after flush")

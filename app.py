@@ -521,8 +521,9 @@ def feed_memory(text: str) -> None:
     not what was typed. Never crashes or blocks: on timeout/error it falls back to the pre-fed memory."""
     session_id = f"live-fed-{uuid4().hex[:6]}"
     try:
+        # extraction needs a conversation, not a bare line (dry-run finding — see mem.remember)
         mem.remember(session_id=session_id,
-                     messages=[{"sender_id": USER_ID, "role": "user", "content": text}])
+                     messages=seed.wrap_conversation(USER_ID, "live note", text))
     except Exception as e:  # noqa: BLE001
         st.warning(f"feed failed to enqueue ({e}) — using this morning's pre-fed memory.")
         _show_prefed_fallback()

@@ -1,0 +1,5 @@
+[
+  {
+    "note": "billed-credits receipts exist only on the Snowflake backend (receipts (ACCOUNT_USAGE) exist only on the Snowflake backend)"
+  }
+]
