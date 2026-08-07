@@ -6,11 +6,12 @@
 <title>Rent</title>
 <style>
   :root{
-    --bg:#FAFBFA; --panel:#FFFFFF; --hairline:#E4E7EB;
-    --ink:#171C22; --ink-2:#4B5563; --ink-3:#8A93A0;
-    --green:#1B7F4C; --red:#B3261E;
+    /* Rent Terminal Dark — same palette as the live app (app.py) */
+    --bg:#0B0F14; --panel:#11161D; --panel-2:#0E141B; --border:#1F2937;
+    --ink:#E6EDF3; --muted:#6B7280;
+    --green:#00D26A; --red:#FF4D4F; --amber:#FFB000;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","IBM Plex Mono",Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;padding:0;background:var(--bg);color:var(--ink);}
@@ -21,366 +22,289 @@
     scroll-behavior:smooth;
     -webkit-font-smoothing:antialiased;
   }
-  ::selection{background:#CFE8DA;color:var(--ink);}
+  ::selection{background:#12351f;color:var(--ink);}
 
   .slide{
-    min-height:100vh;
-    width:100%;
-    scroll-snap-align:start;
-    scroll-snap-stop:always;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    padding:6vh 8vw;
-    position:relative;
-    border-top:1px solid var(--hairline);
+    min-height:100vh; width:100%;
+    scroll-snap-align:start; scroll-snap-stop:always;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:5.5vh 7vw; position:relative;
+    border-top:1px solid var(--border);
   }
   .slide:first-child{border-top:none;}
 
   @media (prefers-reduced-motion: no-preference){
-    .slide{ animation: fadeIn .6s ease both; }
-  }
-  @keyframes fadeIn{
-    from{ opacity:0; transform:translateY(10px); }
-    to{ opacity:1; transform:translateY(0); }
+    .slide{ animation: fadeIn .55s ease both; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
   }
 
   .eyebrow{
-    font-size:clamp(.78rem,1vw,.92rem);
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--ink-3);
-    font-weight:600;
-    margin:0 0 1.3rem 0;
+    font-family:var(--mono); font-size:.8rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--amber); font-weight:600; margin:0 0 1.1rem 0;
   }
-
-  h1,h2{margin:0; font-weight:600; letter-spacing:-.01em; color:var(--ink);}
-  h1{font-size:clamp(3rem,7.5vw,5.5rem); font-weight:700;}
-  h2{font-size:clamp(1.9rem,4.6vw,3.1rem); line-height:1.15;}
-
+  h1,h2{margin:0; font-weight:700; letter-spacing:-.02em; color:var(--ink);}
+  h1{font-size:clamp(3.2rem,8vw,6rem);}
+  h2{font-size:clamp(1.8rem,4.3vw,2.9rem); line-height:1.12;}
   p.lede{
-    font-size:clamp(1.05rem,1.7vw,1.35rem);
-    color:var(--ink-2);
-    max-width:56ch;
-    margin:1.1rem 0 0 0;
-    line-height:1.55;
-    font-weight:400;
+    font-size:clamp(1.02rem,1.6vw,1.28rem); color:#AEB6C2; max-width:60ch;
+    margin:1.1rem 0 0 0; line-height:1.55; font-weight:400;
   }
-  .byline{
-    font-size:clamp(.85rem,1.1vw,1rem);
-    color:var(--ink-3);
-    margin-top:1.8rem;
-  }
-  .note{
-    font-size:clamp(.78rem,1vw,.9rem);
-    color:var(--ink-3);
-    font-weight:400;
-  }
-  .define{
-    display:inline;
-    color:var(--ink-2);
-  }
-  .define b{ color:var(--ink); font-weight:600; }
+  .lede b{color:var(--ink); font-weight:600;}
+  .def b.rent{color:var(--amber);} .def b.earn{color:var(--green);}
+  .note{font-size:.82rem; color:var(--muted); font-weight:400;}
+  .wordmark{ margin-top:2rem; font-family:var(--mono); font-size:clamp(1.2rem,2.4vw,1.6rem);
+             color:var(--amber); letter-spacing:.2em; font-weight:700; }
+  .team{ margin-top:.75rem; font-family:var(--mono); font-size:clamp(.92rem,1.7vw,1.15rem);
+         color:#AEB6C2; letter-spacing:.03em; }
+  .team::before{ content:"› "; color:var(--amber); }
 
-  .num{
-    font-variant-numeric:tabular-nums;
-    font-weight:600;
-    letter-spacing:-.01em;
-    font-family:var(--sans);
-  }
-  .num-hero{ font-size:clamp(3.2rem,9vw,6.5rem); line-height:1; font-weight:700; }
-  .num-mid{ font-size:clamp(2rem,4.6vw,3.4rem); line-height:1; }
+  /* problem stat chips */
+  .chips{ display:flex; gap:1rem; flex-wrap:wrap; margin-top:2rem; }
+  .chip{ background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:1rem 1.3rem; }
+  .chip .n{ font-family:var(--mono); font-size:clamp(1.6rem,3.4vw,2.4rem); font-weight:700; color:var(--ink); }
+  .chip .k{ font-size:.86rem; color:var(--muted); margin-top:.35rem; max-width:30ch; }
 
-  .row{ display:flex; gap:2.4rem; flex-wrap:wrap; align-items:flex-start; }
-  .row.top{ margin-top:2.4rem; }
+  /* ---- App-window chrome (frames a reproduction of a real app screen) ---- */
+  .appwin{ margin-top:1.6rem; background:var(--panel); border:1px solid var(--border); border-radius:10px;
+           overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.4); max-width:960px; }
+  .appbar{ display:flex; align-items:center; gap:.7rem; padding:.6rem .9rem; border-bottom:1px solid var(--border);
+           background:var(--panel-2); font-family:var(--mono); }
+  .dots{ display:flex; gap:.4rem; }
+  .dots i{ width:.62rem; height:.62rem; border-radius:50%; display:inline-block; }
+  .dots i:nth-child(1){background:var(--red);} .dots i:nth-child(2){background:var(--amber);} .dots i:nth-child(3){background:var(--green);}
+  .appbar .brand{ color:var(--amber); font-size:.74rem; letter-spacing:.14em; font-weight:700; }
+  .appbar .tab{ margin-left:auto; color:var(--muted); font-size:.74rem; letter-spacing:.06em; }
+  .appbody{ padding:1rem 1.2rem; font-family:var(--mono); }
 
-  .stat{ min-width:200px; }
-  .stat .num{ color:var(--ink); }
-  .stat .stat-label{ margin-top:.5rem; font-size:.95rem; color:var(--ink-2); max-width:26ch; }
+  .tile-label{ color:var(--muted); font-size:.72rem; letter-spacing:.09em; text-transform:uppercase; }
+  .headline{ color:var(--amber); font-size:clamp(1.8rem,4vw,2.8rem); font-weight:700; line-height:1.05; margin-top:.2rem; }
 
-  /* ---- flow diagram (Born) ---- */
-  .flow{ display:flex; align-items:stretch; gap:1.4rem; flex-wrap:wrap; margin-top:2.6rem; }
-  .flow-box{
-    background:var(--panel); border:1px solid var(--hairline); border-radius:.4rem;
-    padding:1.3rem 1.5rem; min-width:200px; flex:1 1 200px;
-  }
-  .flow-box .flow-h{ font-weight:600; font-size:1.05rem; color:var(--ink); }
-  .flow-box .flow-s{ font-size:.92rem; color:var(--ink-2); margin-top:.55rem; line-height:1.45; }
-  .flow-arrow{ font-size:1.6rem; color:var(--ink-3); flex:0 0 auto; align-self:center; padding:0 .1rem; }
+  /* ---- Leaderboard table (app screen 1) ---- */
+  .tblwrap{ overflow-x:auto; margin-top:.9rem; }
+  table.rent{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:clamp(.66rem,1.1vw,.88rem); }
+  table.rent th{ color:var(--muted); text-align:right; padding:4px 6px; border-bottom:1px solid var(--border);
+                 font-weight:500; text-transform:uppercase; font-size:.66rem; letter-spacing:.04em; white-space:nowrap; }
+  table.rent th.l, table.rent td.l{ text-align:left; }
+  table.rent td{ text-align:right; padding:4px 6px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td.earn{color:var(--green);} td.rent{color:var(--amber);}
+  td.net-pos{color:var(--green); font-weight:700;} td.net-neg{color:var(--red); font-weight:700;}
+  td.cat{color:var(--muted);}
+  tr.dim td{color:var(--muted);}
+  .badge{ padding:1px 8px; border-radius:999px; font-size:.66rem; font-weight:700; }
+  .badge-active{ color:var(--green); border:1px solid var(--green); }
+  .badge-pruned{ color:var(--red); border:1px solid var(--red); }
+  tr.negrow td:first-child{ box-shadow: inset 2px 0 0 var(--red); }
 
-  /* ---- seats (Retrieved) ---- */
-  .seat-block{ margin-top:1.6rem; }
-  .seat-block + .seat-block{ margin-top:1.9rem; }
-  .seat-block-label{ font-size:.92rem; color:var(--ink-2); margin-bottom:.6rem; }
-  .seats{ display:flex; gap:.4rem; flex-wrap:wrap; }
-  .seat{
-    min-width:2.1rem; height:2.1rem; padding:0 .4rem; border-radius:.25rem;
-    display:flex; align-items:center; justify-content:center;
-    font-size:.72rem; font-weight:600; color:var(--ink-2);
-    border:1px solid var(--hairline); background:var(--panel);
-  }
+  /* ---- FIRE panel (app screen 3) ---- */
+  .redbar{ border:1px solid var(--red); border-radius:8px; padding:.55rem .9rem; color:var(--ink);
+           font-size:.82rem; margin-bottom:.7rem; }
+  .firecard{ display:flex; align-items:center; gap:.8rem; background:var(--panel-2); border:1px solid var(--red);
+             border-radius:8px; padding:.75rem .9rem; margin:.5rem 0; font-size:.86rem; }
+  .firecard .body{ flex:1 1 auto; line-height:1.4; }
+  .firecard .body b{ color:var(--red); }
+  .firecard .body .a{ color:var(--amber); } .firecard .body .z{ color:var(--ink); }
+  .btn-fire{ flex:0 0 auto; color:var(--red); border:1px solid var(--red); border-radius:6px;
+             padding:.35rem .8rem; font-family:var(--mono); font-size:.78rem; font-weight:700; letter-spacing:.04em; }
+  .btn-prune{ display:inline-block; margin-top:.6rem; background:var(--red); color:#0B0F14; border:none; border-radius:6px;
+              padding:.5rem 1.4rem; font-family:var(--mono); font-size:.86rem; font-weight:700; letter-spacing:.08em; }
 
-  /* ---- ledger table (Rated) ---- */
-  table.ledger{ width:100%; border-collapse:collapse; margin-top:1.8rem; }
-  table.ledger caption{ text-align:left; color:var(--ink-3); font-size:.88rem; margin-bottom:.7rem; font-weight:400; }
-  table.ledger th, table.ledger td{
-    text-align:left; padding:.65rem .9rem; font-size:clamp(.86rem,1.3vw,1.05rem);
-    border-bottom:1px solid var(--hairline);
-  }
-  table.ledger th{ color:var(--ink-3); font-weight:600; text-transform:uppercase; font-size:.74rem; letter-spacing:.07em; }
-  table.ledger td.num, table.ledger th.num{ text-align:right; }
-  tr.gap-row td{ border-bottom:none; padding:.35rem 0; }
-  tr.earn td:first-child{ border-left:2px solid var(--green); }
-  tr.negative td:first-child{ border-left:2px solid var(--red); }
-  tr.earn td.net{ color:var(--green); font-weight:600; }
-  tr.negative td.net{ color:var(--red); font-weight:600; }
-  table.ledger td.title-cell{ color:var(--ink-2); }
-  table.ledger td.bundle-id{ color:var(--ink); font-weight:600; }
+  /* ---- Regression suite (app screen 4) ---- */
+  .suite{ font-family:var(--mono); font-size:clamp(.74rem,1.15vw,.92rem); line-height:1.85; }
+  .suite .pass{ color:var(--green); font-weight:700; }
+  .suite .q{ color:var(--ink); } .suite .gold{ color:var(--muted); }
 
-  /* ---- prune cards (Removing) ---- */
-  .prune-card{
-    background:var(--panel); border:1px solid var(--hairline); border-left:2px solid var(--red);
-    border-radius:.3rem; padding:1.2rem 1.4rem; min-width:230px; flex:1 1 230px;
-  }
-  .prune-card .pc-id{ font-weight:600; color:var(--ink); font-size:1.15rem; }
-  .prune-card .pc-title{ font-size:.95rem; color:var(--ink-2); margin-top:.2rem; }
-  .prune-card .pc-stat{ font-size:.85rem; color:var(--ink-3); margin-top:.6rem; }
+  /* cost bars */
+  .bars{ margin-top:1rem; }
+  .bar-row{ display:flex; align-items:center; gap:1rem; margin-top:.55rem; }
+  .bar-label{ font-family:var(--mono); font-size:.82rem; color:var(--muted); width:4.5rem; flex:0 0 auto; }
+  .bar-track{ flex:1 1 auto; background:#0E141B; border:1px solid var(--border); border-radius:5px; height:2rem;
+              overflow:hidden; max-width:480px; }
+  .bar-fill{ height:100%; display:flex; align-items:center; padding:0 .8rem; font-family:var(--mono);
+             font-weight:700; font-size:.84rem; }
+  .bar-fill.before{ background:#28303a; color:var(--ink); }
+  .bar-fill.after{ background:var(--green); color:#06210f; }
+  .proofrow{ display:flex; align-items:baseline; gap:1.4rem; flex-wrap:wrap; margin-top:1.2rem; }
+  .proofrow .big{ font-family:var(--mono); font-weight:700; }
+  .score{ color:var(--green); font-size:clamp(1.6rem,3.6vw,2.4rem); }
+  .delta{ color:var(--green); font-size:clamp(1.6rem,3.6vw,2.4rem); }
 
-  /* ---- proof bars ---- */
-  .bar-row{ display:flex; align-items:center; gap:1.1rem; margin-top:1rem; }
-  .bar-label{ font-size:.92rem; color:var(--ink-2); width:5.5rem; flex:0 0 auto; }
-  .bar-track{ flex:1 1 auto; background:#EEF1F0; border-radius:.2rem; height:2.1rem; overflow:hidden; max-width:520px; }
-  .bar-fill{ height:100%; display:flex; align-items:center; padding:0 .8rem; font-weight:600; font-size:.92rem; }
-  .bar-fill.before{ background:#DADFE3; color:var(--ink); }
-  .bar-fill.after{ background:var(--green); color:#fff; }
+  /* ---- Autopilot log (app screen 5) ---- */
+  .log{ font-family:var(--mono); font-size:clamp(.74rem,1.15vw,.92rem); line-height:1.9; }
+  .log .ts{ color:var(--muted); }
+  .log .pruned{ color:var(--green); font-weight:700; }
+  .log .clean{ color:var(--muted); font-weight:700; }
+  .stack{ margin:1.3rem 0 0 0; padding:0; list-style:none; font-family:var(--mono); font-size:clamp(.9rem,1.6vw,1.05rem);
+          color:#AEB6C2; }
+  .stack li{ margin-bottom:.3rem; } .stack li::before{ content:"› "; color:var(--amber); }
 
-  /* ---- autopilot ---- */
-  .loop-line{
-    margin-top:1.7rem; font-size:clamp(.92rem,1.4vw,1.08rem); color:var(--ink-2); line-height:1.9;
-  }
-  .loop-line b{ color:var(--ink); font-weight:600; }
-  .receipt{
-    font-family:var(--mono); font-size:clamp(.78rem,1.3vw,.95rem);
-    background:var(--panel); border:1px solid var(--hairline); border-radius:.3rem;
-    padding:1rem 1.2rem; color:var(--ink-2); white-space:pre-wrap; word-break:break-word;
-    margin-top:1.6rem; max-width:640px;
-  }
+  .progress{ position:fixed; top:1.1rem; right:1.4rem; z-index:10; font-family:var(--mono);
+             font-size:.78rem; letter-spacing:.05em; color:var(--muted); background:var(--panel);
+             border:1px solid var(--border); padding:.3em .7em; border-radius:6px; }
 
-  /* ---- close ---- */
-  .stack-list{ margin:1.5rem 0 0 0; padding:0; list-style:none; font-size:clamp(1rem,1.8vw,1.2rem); color:var(--ink-2); }
-  .stack-list li{ margin-bottom:.35rem; }
-  .wordmark{
-    margin-top:2.6rem; font-size:clamp(1.3rem,2.6vw,1.7rem);
-    color:var(--ink); letter-spacing:.02em; font-weight:700;
-  }
-
-  .progress{
-    position:fixed; top:1.2rem; right:1.5rem; z-index:10;
-    font-size:.82rem; letter-spacing:.03em; font-variant-numeric:tabular-nums;
-    color:var(--ink-2); background:var(--panel); border:1px solid var(--hairline);
-    padding:.35em .75em; border-radius:.25em;
-  }
-
-  @media (max-width:680px){
-    .slide{ padding:5vh 6vw; }
-  }
+  @media (max-width:680px){ .slide{ padding:5vh 6vw; } .appbody{ padding:.8rem .8rem; } }
 </style>
 </head>
 <body>
 
-<div class="progress" id="progress">01 / 10</div>
+<div class="progress" id="progress">1 / 5</div>
 
-<!-- 1 — TITLE -->
+<!-- 1 — HOOK + PROBLEM -->
 <section class="slide" data-index="1">
-  <div class="eyebrow">Rent</div>
-  <h1>Rent</h1>
-  <p class="lede">A dashboard that tracks what each memory costs an AI agent to use, and whether it
-  helped answer a question correctly. Memories that cost more than they help get turned off.</p>
-  <div class="byline">Built on EverOS memory and a Snowflake ledger.</div>
+  <div class="eyebrow">The memory P&amp;L</div>
+  <h1>Larp Rent</h1>
+  <div class="team">Team&nbsp;·&nbsp;larp larp larp sahur</div>
+  <p class="lede">AI assistants pile up stored memories, and every one gets pushed into prompts over
+  and over — quietly burning tokens. <b>Nobody checks whether any of them actually helps.</b></p>
+  <div class="chips">
+    <div class="chip">
+      <div class="n">1,182</div>
+      <div class="k">tokens in a full-history prompt <span class="note">· measured</span></div>
+    </div>
+    <div class="chip">
+      <div class="n">12</div>
+      <div class="k">memories riding along in every prompt — most never earn their seat</div>
+    </div>
+  </div>
 </section>
 
-<!-- 2 — THE PROBLEM -->
+<!-- 2 — THE P&L (app screen 1) -->
 <section class="slide" data-index="2">
-  <div class="eyebrow">The problem</div>
-  <h2>Every memory used in a prompt costs tokens.</h2>
-  <p class="lede">AI agents retrieve memories to help answer questions. Each memory adds tokens to
-  the prompt sent to the model. Most systems don't track which memories are actually worth that cost.</p>
-  <div class="row top">
-    <div class="stat">
-      <div class="num num-mid">1,182</div>
-      <div class="stat-label">tokens per query, when every memory is included <span class="note">&middot; measured</span></div>
-    </div>
-    <div class="stat">
-      <div class="num num-mid">12</div>
-      <div class="stat-label">memories included in every prompt, in this example</div>
+  <div class="eyebrow">What we do</div>
+  <h2>Every memory gets a balance.</h2>
+  <p class="lede def">Each time a memory is used we charge it <b class="rent">rent</b> — the tokens it
+  costs. When it's the reason an answer was right, we credit what it <b class="earn">earned</b> — the
+  tokens it saved. This is the live ledger.</p>
+
+  <div class="appwin">
+    <div class="appbar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="brand">RENT — THE MEMORY P&amp;L</span><span class="tab">1 · The P&amp;L</span></div>
+    <div class="appbody">
+      <div class="tile-label">Estimated net $ this run</div>
+      <div class="headline">$0.0047</div>
+      <div class="tblwrap">
+      <table class="rent">
+        <tr><th>#</th><th class="l">Bundle</th><th class="l">Title</th>
+            <th>Earned</th><th>Rent</th><th>Net</th><th>Seen</th><th>Status</th></tr>
+        <tr><td>1</td><td class="l">B06</td><td class="l">Globex Corp residency</td>
+            <td class="earn">$0.0007</td><td class="rent">$0.0001</td><td class="net-pos">+$0.0007</td><td>1</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+        <tr><td>2</td><td class="l">B05</td><td class="l">Northwind Traders SLA</td>
+            <td class="earn">$0.0007</td><td class="rent">$0.0001</td><td class="net-pos">+$0.0007</td><td>1</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+        <tr><td>3</td><td class="l">B08</td><td class="l">Billing double-charge</td>
+            <td class="earn">$0.0007</td><td class="rent">$0.0001</td><td class="net-pos">+$0.0006</td><td>1</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+        <tr><td>4</td><td class="l">B07</td><td class="l">Search outage postmortem</td>
+            <td class="earn">$0.0007</td><td class="rent">$0.0001</td><td class="net-pos">+$0.0006</td><td>1</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+        <tr><td>5</td><td class="l">B02</td><td class="l">Automations Engine limits</td>
+            <td class="earn">$0.0007</td><td class="rent">$0.0001</td><td class="net-pos">+$0.0006</td><td>1</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+        <tr class="dim"><td colspan="8" style="text-align:left;color:#4B5563">⋮&nbsp;&nbsp;B01, B04, B03 — three more earners, all net positive</td></tr>
+        <tr class="negrow"><td>9</td><td class="l">B09</td><td class="l">Product FAQ (general overview)</td>
+            <td class="earn">$0.0000</td><td class="rent">$0.0001</td><td class="net-neg">&minus;$0.0001</td><td>2</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+        <tr class="negrow"><td>10</td><td class="l">B10</td><td class="l">External pricing one-pager</td>
+            <td class="earn">$0.0000</td><td class="rent">$0.0001</td><td class="net-neg">&minus;$0.0001</td><td>2</td><td><span class="badge badge-active">ACTIVE</span></td></tr>
+      </table>
+      </div>
+      <div class="note" style="margin-top:.7rem">Green rows pay for themselves. The two red rows have
+        been included twice each and never helped. <span style="color:var(--muted)">(B11, B12 idle —
+        never entered a prompt, not part of the P&amp;L.)</span></div>
     </div>
   </div>
 </section>
 
-<!-- 3 — BORN -->
+<!-- 3 — FIRE (app screen 3) -->
 <section class="slide" data-index="3">
-  <div class="eyebrow">Step 1</div>
-  <h2>How a memory is stored</h2>
-  <p class="lede">A fact is entered as text. The memory system extracts the key detail and stores
-  it. It becomes a new row in a table, turned on by default.</p>
-  <div class="flow">
-    <div class="flow-box">
-      <div class="flow-h">Fact</div>
-      <div class="flow-s">&quot;SSO add-on is $199/mo&quot;</div>
-    </div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box">
-      <div class="flow-h">EverOS</div>
-      <div class="flow-s">extracts and stores it</div>
-    </div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box">
-      <div class="flow-h">Registry row</div>
-      <div class="flow-s">new entry, turned on by default</div>
+  <div class="eyebrow">Screen 3 · Fire</div>
+  <h2>Fire the memories that don't pay.</h2>
+  <p class="lede">Removal is a reversible flag — from now on those memories are simply never included
+  in a prompt again, so every future prompt is smaller and cheaper.</p>
+
+  <div class="appwin">
+    <div class="appbar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="brand">RENT — THE MEMORY P&amp;L</span><span class="tab">3 · Fire</span></div>
+    <div class="appbody">
+      <div class="redbar">Not paying rent — audience picks the victim: FIRE one, then PRUNE the rest.</div>
+      <div class="firecard">
+        <div class="body"><b>B09</b> <span class="z">Product FAQ (general overview)</span> — retrieved
+          <span class="z">2 times</span>, paid <span class="a">$0.0001</span> in rent, earned
+          <span class="z">$0.0000</span> — never supported a correct answer.</div>
+        <div class="btn-fire">FIRE B09</div>
+      </div>
+      <div class="firecard">
+        <div class="body"><b>B10</b> <span class="z">External pricing one-pager</span> — retrieved
+          <span class="z">2 times</span>, paid <span class="a">$0.0001</span> in rent, earned
+          <span class="z">$0.0000</span> — never supported a correct answer.</div>
+        <div class="btn-fire">FIRE B10</div>
+      </div>
+      <div class="btn-prune">PRUNE</div>
     </div>
   </div>
 </section>
 
-<!-- 4 — RETRIEVED -->
+<!-- 4 — PROOF (app screen 4) -->
 <section class="slide" data-index="4">
-  <div class="eyebrow">Step 2</div>
-  <h2>What each memory costs</h2>
-  <p class="lede" style="margin-bottom:0">When a question comes in, the system selects a few
-  relevant memories and adds them to the prompt.
-  <span class="define"><b>Rent</b> is what a memory costs when it is included in a prompt.</span></p>
-  <div class="seat-block">
-    <div class="seat-block-label">Using the full conversation history &mdash; 12 memories, 1,182 tokens <span class="note">&middot; measured</span></div>
-    <div class="seats">
-      <div class="seat">B01</div><div class="seat">B02</div><div class="seat">B03</div><div class="seat">B04</div>
-      <div class="seat">B05</div><div class="seat">B06</div><div class="seat">B07</div><div class="seat">B08</div>
-      <div class="seat">B09</div><div class="seat">B10</div><div class="seat">B11</div><div class="seat">B12</div>
-    </div>
-  </div>
-  <div class="seat-block">
-    <div class="seat-block-label">Using retrieved memories only &mdash; 2 memories, 244 tokens for this question <span class="note">&middot; measured; the split between memories is estimated</span></div>
-    <div class="seats">
-      <div class="seat">B01</div><div class="seat">B09</div>
+  <div class="eyebrow">Screen 4 · Proof</div>
+  <h2>Same answers. Fewer tokens.</h2>
+  <p class="lede">The same eight-question test, before and after removal. Measured — real model calls,
+  gpt-4o-mini.</p>
+
+  <div class="appwin">
+    <div class="appbar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="brand">RENT — THE MEMORY P&amp;L</span><span class="tab">4 · Proof</span></div>
+    <div class="appbody">
+      <div class="tile-label">Fixed regression set — after prune (replayed)</div>
+      <div class="suite" style="margin-top:.6rem">
+        <div><span class="pass">[PASS]</span> <span class="q">Q1: 2026-01-15</span> <span class="gold">(gold: 2026-01-15)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q2: 60 automation runs per minute.</span> <span class="gold">(gold: 60)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q3: $79 per month</span> <span class="gold">(gold: $79)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q4: $199 per month.</span> <span class="gold">(gold: $199)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q5: 99.95%</span> <span class="gold">(gold: 99.95%)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q6: EU region.</span> <span class="gold">(gold: EU)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q7: 47 minutes</span> <span class="gold">(gold: 47 minutes)</span></div>
+        <div><span class="pass">[PASS]</span> <span class="q">Q8: 312 customers.</span> <span class="gold">(gold: 312)</span></div>
+      </div>
+      <div class="bars">
+        <div class="bar-row"><div class="bar-label">Before</div>
+          <div class="bar-track"><div class="bar-fill before" style="width:100%">205.9 tok / query</div></div></div>
+        <div class="bar-row"><div class="bar-label">After</div>
+          <div class="bar-track"><div class="bar-fill after" style="width:75.8%">156.1 tok / query</div></div></div>
+      </div>
+      <div class="proofrow">
+        <div class="big score">8/8 → 8/8</div>
+        <div class="big delta">&minus;24.2%</div>
+        <div class="note">identical score · fewer tokens per query · <b style="color:var(--ink)">measured</b></div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 5 — GRADED -->
+<!-- 5 — AUTOPILOT + CLOSE (app screen 5) -->
 <section class="slide" data-index="5">
-  <div class="eyebrow">Step 3</div>
-  <h2>Whether a memory helped</h2>
-  <p class="lede" style="margin-bottom:0">The model's answer is compared to the known correct
-  answer. <span class="define"><b>Earned</b> is the number of tokens saved when a memory was the
-  reason a question was answered correctly.</span></p>
-  <div class="row top">
-    <div class="stat">
-      <div class="num num-mid">936</div>
-      <div class="stat-label">tokens saved on this question (1,180 with full history &rarr; 244
-      with retrieval) <span class="note">&middot; measured</span></div>
-    </div>
-    <div class="stat">
-      <div class="stat-label" style="margin-top:0">B01 supplied the correct answer, so B01 earns
-      credit for the 936 tokens saved. B09 was also included but wasn't the source of the answer,
-      so it earns nothing on this question.</div>
-    </div>
-  </div>
-</section>
+  <div class="eyebrow">Screen 5 · Autopilot</div>
+  <h2>And it runs itself.</h2>
+  <p class="lede">Find the dead weight, remove it, re-check accuracy, roll back automatically if the
+  score slips. Here's the system doing it, unattended.</p>
 
-<!-- 6 — RATED -->
-<section class="slide" data-index="6">
-  <div class="eyebrow">Step 4</div>
-  <h2>Rent, earned, and net &mdash; totals for each memory</h2>
-  <table class="ledger">
-    <caption>From the actual benchmark run, 8 questions, before anything is turned off. Rent and
-      net are an estimated per-memory share of a measured total; earned reflects measured token
-      savings.</caption>
-    <thead>
-      <tr><th>Memory</th><th class="num">Included</th><th class="num">Rent</th><th class="num">Earned</th><th class="num">Net</th></tr>
-    </thead>
-    <tbody>
-      <tr class="earn"><td class="bundle-id">B06</td><td class="title-cell">Globex Corp residency</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td></tr>
-      <tr class="earn"><td class="bundle-id">B05</td><td class="title-cell">Northwind Traders SLA</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td></tr>
-      <tr class="earn"><td class="bundle-id">B08</td><td class="title-cell">Billing double-charge incident</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0006</td></tr>
-      <tr class="gap-row"><td colspan="5">&nbsp;</td></tr>
-      <tr class="negative"><td class="bundle-id">B09</td><td class="title-cell">Product FAQ (general overview)</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td></tr>
-      <tr class="negative"><td class="bundle-id">B10</td><td class="title-cell">External pricing one-pager</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- 7 — PRUNED -->
-<section class="slide" data-index="7">
-  <div class="eyebrow">Step 5</div>
-  <h2>Removing the ones that don't help</h2>
-  <p class="lede">Memories that keep getting included but never help produce a correct answer are
-  marked inactive. They stop being added to future prompts. This can be undone.</p>
-  <div class="row top">
-    <div class="prune-card">
-      <div class="pc-id">B09</div>
-      <div class="pc-title">Product FAQ (general overview)</div>
-      <div class="pc-stat">Included 2 times, earned $0.0000</div>
-    </div>
-    <div class="prune-card">
-      <div class="pc-id">B10</div>
-      <div class="pc-title">External pricing one-pager</div>
-      <div class="pc-stat">Included 2 times, earned $0.0000</div>
+  <div class="appwin">
+    <div class="appbar"><span class="dots"><i></i><i></i><i></i></span>
+      <span class="brand">RENT — THE MEMORY P&amp;L</span><span class="tab">5 · Autopilot</span></div>
+    <div class="appbody">
+      <div class="tile-label">Autopilot — self-pruning audit</div>
+      <div class="log" style="margin-top:.6rem">
+        <div><span class="ts">2026-08-07T15:04:46</span> <span class="pruned">PRUNED</span> — pruned B09, B10:
+          score <span style="color:var(--green)">8/8→8/8</span>, 205.9→156.1 tok/query</div>
+        <div><span class="ts">2026-08-07T14:39:28</span> <span class="clean">CLEAN</span> — no memory qualified for removal this cycle</div>
+      </div>
+      <div class="note" style="margin-top:.8rem">Actual lines from the system's audit log. If accuracy had
+        dropped, the removal would have been restored and logged automatically. · measured</div>
     </div>
   </div>
-  <div class="note" style="margin-top:1.3rem">These are the only two memories in this run that were
-    included more than once and never helped a correct answer.</div>
-</section>
 
-<!-- 8 — THE RESULT -->
-<section class="slide" data-index="8">
-  <div class="eyebrow">Result</div>
-  <h2>The result</h2>
-  <div class="row top">
-    <div class="stat">
-      <div class="stat-label" style="margin-top:0;margin-bottom:.5rem">Correct answers, out of 8 questions</div>
-      <div class="num num-hero">8/8&nbsp;&rarr;&nbsp;8/8</div>
-      <div class="stat-label">same score, before and after turning off B09 and B10</div>
-    </div>
-  </div>
-  <div class="bar-row">
-    <div class="bar-label">Before</div>
-    <div class="bar-track"><div class="bar-fill before" style="width:100%">205.9 tokens</div></div>
-  </div>
-  <div class="bar-row">
-    <div class="bar-label">After</div>
-    <div class="bar-track"><div class="bar-fill after" style="width:75.8%">156.1 tokens</div></div>
-  </div>
-  <div class="row top" style="align-items:baseline; gap:1.2rem;">
-    <div class="num num-mid" style="color:var(--green)">&minus;24.2%</div>
-    <div class="stat-label" style="margin-top:0">average tokens per query, same score <span class="note">&middot; measured, real model calls, gpt-4o-mini</span></div>
-  </div>
-</section>
-
-<!-- 9 — AUTOPILOT -->
-<section class="slide" data-index="9">
-  <div class="eyebrow">Automation</div>
-  <h2>Running this automatically</h2>
-  <p class="lede">The same process can run on a schedule: look for memories that aren't helping,
-  test removing them, and check the score before keeping the change.</p>
-  <div class="loop-line">
-    Check for candidates &rarr; test removing them &rarr; re-run the questions &rarr;
-    <b>keep the change, or undo it automatically if the score drops</b>
-  </div>
-  <div class="receipt">{"cycle": 1, "action": "clean", "candidates": [], "ts": "2026-08-07T14:39:28"}</div>
-  <div class="note" style="margin-top:.7rem">An actual line from the system's log. &quot;clean&quot;
-    means no memory qualified for removal in this run. &middot; measured</div>
-</section>
-
-<!-- 10 — CLOSE -->
-<section class="slide" data-index="10">
-  <div class="eyebrow">Summary</div>
-  <h2>What each memory costs. Whether it helped.</h2>
-  <p class="lede">Rent tracks what each memory costs to use and whether it helps produce correct
-  answers. Memories that cost more than they help get turned off.</p>
-  <ul class="stack-list">
-    <li>EverOS memory</li>
-    <li>Snowflake or SQLite ledger</li>
-    <li>Any LLM</li>
+  <p class="lede" style="margin-top:1.6rem"><b style="color:var(--ink)">Costs tracked live. Credit
+  requires evidence.</b></p>
+  <ul class="stack">
+    <li>EverOS — the memory layer</li>
+    <li>SQL ledger (Snowflake or SQLite) — every call and charge</li>
+    <li>Any LLM for answers</li>
   </ul>
-  <div class="wordmark">RENT</div>
+  <div class="wordmark">LARP RENT</div>
 </section>
 
 <script>
@@ -388,17 +312,15 @@
   var sections = document.querySelectorAll('.slide');
   var counter = document.getElementById('progress');
   var total = sections.length;
-  function pad(n){ return String(n).padStart(2,'0'); }
-  counter.textContent = pad(1) + ' / ' + pad(total);
-  if ('IntersectionObserver' in window) {
+  counter.textContent = '1 / ' + total;
+  if ('IntersectionObserver' in window){
     var observer = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-          var idx = entry.target.getAttribute('data-index');
-          counter.textContent = pad(parseInt(idx, 10)) + ' / ' + pad(total);
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5){
+          counter.textContent = entry.target.getAttribute('data-index') + ' / ' + total;
         }
       });
-    }, { threshold: [0.5] });
+    }, { threshold:[0.5] });
     sections.forEach(function(s){ observer.observe(s); });
   }
 })();
