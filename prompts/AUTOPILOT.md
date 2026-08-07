@@ -66,3 +66,20 @@ TODAY; the eval is the safety gate, and in production it's replaced by your live
 
 Commit as `autopilot: self-pruning audit loop with verify + rollback`, push, reply DONE with a
 5-line summary.
+
+## ADDENDUM — Savings Odometer (build in the same pass; ~30 min)
+
+The demo's centerpiece number: a big cumulative "SAVED THIS SESSION" ticker (tokens AND $) that
+climbs with every live query. Honest math, two labeled sources, never conflated:
+- Per live memory-arm query: saved_est = tokenize(build_naive_prompt(...)  via cl100k_base) −
+  measured actual prompt_tokens. Label: "estimated vs full-context baseline (tokenizer)". Computed
+  with ZERO extra LLM calls — build_naive_prompt is pure string assembly.
+- The 8-question benchmark's measured savings (Σ naive−memory prompt tokens from the pre capture)
+  shown as a separate static line: "eval set: N tokens saved — measured". Never summed into the
+  estimated ticker.
+- Odometer $ = tokens × pinned rate × $2.00/credit; count-up animation on change (reuse the
+  keyframes from the lifecycle commit); after PRUNE the per-query delta widens — the presenter's
+  line: "watch how much faster it climbs now that the freeloaders are gone."
+- Replay mode: odometer renders the captured benchmark totals only (no live ticking), zero calls.
+Acceptance: run 3 live queries → odometer climbs by the per-query estimates; PRUNE → next query's
+delta visibly larger; labels exactly as specified; check_demo still green.
