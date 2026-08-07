@@ -96,19 +96,35 @@
 
   .stat{ min-width:200px; }
   .stat .num{ color:var(--ink); }
-  .stat .stat-label{ margin-top:.5rem; font-size:.95rem; color:var(--ink-2); max-width:26ch; }
+  .stat .stat-label{ margin-top:.5rem; font-size:.95rem; color:var(--ink-2); max-width:30ch; }
+
+  /* ---- title hairline motif ---- */
+  .hr-motif{ margin-top:2.4rem; width:3rem; height:1px; background:var(--ink-3); border:none; }
+
+  /* ---- stacked prompt bar (Problem) ---- */
+  .stackbar-wrap{ margin-top:2.2rem; max-width:640px; }
+  .stackbar-caption{ font-size:.92rem; color:var(--ink-2); margin-bottom:.7rem; }
+  .stackbar-track{ display:flex; height:2.6rem; border:1px solid var(--hairline); border-radius:.25rem; overflow:hidden; }
+  .stackbar-track .seg{ height:100%; border-right:1px solid var(--bg); }
+  .stackbar-track .seg:last-child{ border-right:none; }
+  .seg-a{ background:#DADFE3; }
+  .seg-b{ background:#EEF1F0; }
+  .seg-c{ background:#E4E7EB; }
+  .stackbar-labels{ display:flex; margin-top:.6rem; }
+  .stackbar-labels > div{ font-size:.8rem; color:var(--ink-2); padding-right:.6rem; }
+  .stackbar-labels .seg-name{ display:block; color:var(--ink-3); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.15rem; }
+  .stackbar-labels .num{ font-weight:600; color:var(--ink); }
 
   /* ---- flow diagram (Born) ---- */
-  .flow{ display:flex; align-items:stretch; gap:1.4rem; flex-wrap:wrap; margin-top:2.6rem; }
-  .flow-box{
-    background:var(--panel); border:1px solid var(--hairline); border-radius:.4rem;
-    padding:1.3rem 1.5rem; min-width:200px; flex:1 1 200px;
-  }
-  .flow-box .flow-h{ font-weight:600; font-size:1.05rem; color:var(--ink); }
-  .flow-box .flow-s{ font-size:.92rem; color:var(--ink-2); margin-top:.55rem; line-height:1.45; }
-  .flow-arrow{ font-size:1.6rem; color:var(--ink-3); flex:0 0 auto; align-self:center; padding:0 .1rem; }
+  .flow-svg{ width:100%; max-width:920px; height:auto; margin-top:2.5rem; overflow:visible; display:block; }
+  .flow-svg .node-rect{ fill:var(--panel); stroke:var(--hairline); stroke-width:1; }
+  .flow-svg .node-arrow{ stroke:var(--ink-3); stroke-width:1.5; }
+  .flow-svg .arrowhead{ fill:var(--ink-3); }
+  .node-content{ font-family:var(--sans); padding:1.05rem 1.2rem; box-sizing:border-box; height:100%; }
+  .node-title{ font-weight:600; font-size:1.02rem; color:var(--ink); }
+  .node-body{ font-size:.84rem; color:var(--ink-2); margin-top:.6rem; line-height:1.5; }
 
-  /* ---- seats (Retrieved) ---- */
+  /* ---- seats (Retrieved / Removal) ---- */
   .seat-block{ margin-top:1.6rem; }
   .seat-block + .seat-block{ margin-top:1.9rem; }
   .seat-block-label{ font-size:.92rem; color:var(--ink-2); margin-bottom:.6rem; }
@@ -119,6 +135,31 @@
     font-size:.72rem; font-weight:600; color:var(--ink-2);
     border:1px solid var(--hairline); background:var(--panel);
   }
+  .seat.empty{
+    background:transparent; border:1px dashed var(--ink-3); color:var(--ink-3);
+  }
+
+  /* ---- rent bars (Retrieved) ---- */
+  .rentbars{ max-width:440px; margin-top:.3rem; }
+  .rentbar-row{ display:flex; align-items:center; gap:.8rem; margin-top:.55rem; }
+  .rentbar-label{ width:2.8rem; font-size:.85rem; font-weight:600; color:var(--ink); flex:0 0 auto; }
+  .rentbar-track{ flex:1 1 auto; background:#EEF1F0; height:1.15rem; border-radius:.15rem; overflow:hidden; }
+  .rentbar-fill{ height:100%; background:#B7BEC6; }
+  .rentbar-value{ width:4.4rem; text-align:right; font-size:.85rem; color:var(--ink-2); flex:0 0 auto; }
+
+  /* ---- compare bars (Graded / Result) ---- */
+  .bar-row{ display:flex; align-items:center; gap:1.1rem; margin-top:1rem; }
+  .bar-label{ font-size:.92rem; color:var(--ink-2); width:6.4rem; flex:0 0 auto; }
+  .bar-track{ flex:1 1 auto; background:#EEF1F0; border-radius:.2rem; height:2.1rem; overflow:hidden; max-width:520px; }
+  .bar-fill{ height:100%; display:flex; align-items:center; padding:0 .8rem; font-weight:600; font-size:.92rem; }
+  .bar-fill.before{ background:#DADFE3; color:var(--ink); }
+  .bar-fill.after{ background:var(--green); color:#fff; }
+  .bracket-row .bar-track{ display:flex; overflow:visible; height:auto; background:none; max-width:520px; }
+  .bracket-spacer{ flex:none; height:1px; }
+  .bracket{ flex:none; height:16px; border-left:1px solid var(--ink-3); border-right:1px solid var(--ink-3);
+            border-bottom:1px solid var(--ink-3); position:relative; }
+  .bracket-label{ position:absolute; top:20px; left:50%; transform:translateX(-50%); font-size:.83rem;
+                   color:var(--ink-2); white-space:nowrap; }
 
   /* ---- ledger table (Rated) ---- */
   table.ledger{ width:100%; border-collapse:collapse; margin-top:1.8rem; }
@@ -136,35 +177,40 @@
   tr.negative td.net{ color:var(--red); font-weight:600; }
   table.ledger td.title-cell{ color:var(--ink-2); }
   table.ledger td.bundle-id{ color:var(--ink); font-weight:600; }
+  .netbar{ position:relative; width:130px; height:12px; }
+  .netbar::before{ content:""; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--hairline); }
+  .netbar-fill{ position:absolute; top:1px; height:10px; }
+  .netbar-fill.pos{ left:50%; background:var(--green); }
+  .netbar-fill.neg{ right:50%; background:var(--red); }
 
-  /* ---- prune cards (Removing) ---- */
-  .prune-card{
-    background:var(--panel); border:1px solid var(--hairline); border-left:2px solid var(--red);
-    border-radius:.3rem; padding:1.2rem 1.4rem; min-width:230px; flex:1 1 230px;
-  }
-  .prune-card .pc-id{ font-weight:600; color:var(--ink); font-size:1.15rem; }
-  .prune-card .pc-title{ font-size:.95rem; color:var(--ink-2); margin-top:.2rem; }
-  .prune-card .pc-stat{ font-size:.85rem; color:var(--ink-3); margin-top:.6rem; }
+  /* ---- proof / check rows (Result) ---- */
+  .check-block{ display:flex; gap:2.8rem; margin-top:2.1rem; flex-wrap:wrap; }
+  .check-row-label{ font-size:.85rem; color:var(--ink-2); margin-bottom:.5rem; }
+  .check-row{ display:flex; gap:.35rem; }
+  .check-row svg{ width:18px; height:18px; overflow:visible; }
+  .check-mark{ stroke:var(--green); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+  .check-row-total{ font-size:.8rem; color:var(--ink-3); margin-top:.45rem; }
 
-  /* ---- proof bars ---- */
-  .bar-row{ display:flex; align-items:center; gap:1.1rem; margin-top:1rem; }
-  .bar-label{ font-size:.92rem; color:var(--ink-2); width:5.5rem; flex:0 0 auto; }
-  .bar-track{ flex:1 1 auto; background:#EEF1F0; border-radius:.2rem; height:2.1rem; overflow:hidden; max-width:520px; }
-  .bar-fill{ height:100%; display:flex; align-items:center; padding:0 .8rem; font-weight:600; font-size:.92rem; }
-  .bar-fill.before{ background:#DADFE3; color:var(--ink); }
-  .bar-fill.after{ background:var(--green); color:#fff; }
+  /* ---- automation cycle diagram ---- */
+  .cycle-svg{ width:100%; max-width:920px; height:auto; margin-top:2.3rem; overflow:visible; display:block; }
+  .cycle-node{ fill:var(--panel); stroke:var(--ink); stroke-width:1.5; }
+  .cycle-arrow{ stroke:var(--ink-3); stroke-width:1.5; }
+  .cycle-arrowhead{ fill:var(--ink-3); }
+  .rollback-arc{ fill:none; stroke:var(--red); stroke-width:1.3; stroke-dasharray:4 3; }
+  .rollback-arrowhead{ fill:var(--red); }
+  .rollback-label{ font-size:12.5px; fill:var(--red); font-family:var(--sans); }
+  .cycle-num{ font-size:18px; font-weight:700; fill:var(--ink); font-family:var(--sans); }
+  .cycle-labels{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:.5rem; max-width:920px; }
+  .cycle-label-title{ font-weight:600; color:var(--ink); font-size:.92rem; text-align:center; }
+  .cycle-label-body{ font-size:.78rem; color:var(--ink-2); text-align:center; margin-top:.3rem; line-height:1.4; }
 
-  /* ---- autopilot ---- */
-  .loop-line{
-    margin-top:1.7rem; font-size:clamp(.92rem,1.4vw,1.08rem); color:var(--ink-2); line-height:1.9;
-  }
-  .loop-line b{ color:var(--ink); font-weight:600; }
-  .receipt{
-    font-family:var(--mono); font-size:clamp(.78rem,1.3vw,.95rem);
-    background:var(--panel); border:1px solid var(--hairline); border-radius:.3rem;
-    padding:1rem 1.2rem; color:var(--ink-2); white-space:pre-wrap; word-break:break-word;
-    margin-top:1.6rem; max-width:640px;
-  }
+  .receipt-strip{ margin-top:1.8rem; max-width:700px; border-top:1px dashed var(--hairline);
+                   border-bottom:1px dashed var(--hairline); padding:.9rem 0; }
+  .receipt-strip .receipt-text{ font-family:var(--mono); font-size:.86rem; color:var(--ink-2); }
+  .receipt-strip .receipt-caption{ font-size:.78rem; color:var(--ink-3); margin-top:.5rem; }
+
+  /* ---- prune notes (Removal) ---- */
+  .prune-note{ font-size:.92rem; color:var(--ink-2); margin-top:.4rem; max-width:60ch; line-height:1.5; }
 
   /* ---- close ---- */
   .stack-list{ margin:1.5rem 0 0 0; padding:0; list-style:none; font-size:clamp(1rem,1.8vw,1.2rem); color:var(--ink-2); }
@@ -183,6 +229,7 @@
 
   @media (max-width:680px){
     .slide{ padding:5vh 6vw; }
+    .cycle-labels{ grid-template-columns:repeat(2,1fr); }
   }
 </style>
 </head>
@@ -197,6 +244,7 @@
   <p class="lede">A dashboard that tracks what each memory costs an AI agent to use, and whether it
   helped answer a question correctly. Memories that cost more than they help get turned off.</p>
   <div class="byline">Built on EverOS memory and a Snowflake ledger.</div>
+  <hr class="hr-motif">
 </section>
 
 <!-- 2 — THE PROBLEM -->
@@ -205,15 +253,20 @@
   <h2>Every memory used in a prompt costs tokens.</h2>
   <p class="lede">AI agents retrieve memories to help answer questions. Each memory adds tokens to
   the prompt sent to the model. Most systems don't track which memories are actually worth that cost.</p>
-  <div class="row top">
-    <div class="stat">
-      <div class="num num-mid">1,182</div>
-      <div class="stat-label">tokens per query, when every memory is included <span class="note">&middot; measured</span></div>
+  <div class="stackbar-wrap">
+    <div class="stackbar-caption">One real question's prompt, built piece by piece &mdash; 244 tokens total <span class="note">&middot; measured</span></div>
+    <div class="stackbar-track">
+      <div class="seg seg-a" style="width:25.0000%"></div>
+      <div class="seg seg-b" style="width:36.4754%"></div>
+      <div class="seg seg-c" style="width:38.5246%"></div>
     </div>
-    <div class="stat">
-      <div class="num num-mid">12</div>
-      <div class="stat-label">memories included in every prompt, in this example</div>
+    <div class="stackbar-labels">
+      <div style="width:25.0000%"><span class="seg-name">System + question</span><span class="num">61</span> tok</div>
+      <div style="width:36.4754%"><span class="seg-name">B01</span><span class="num">89</span> tok</div>
+      <div style="width:38.5246%"><span class="seg-name">B09</span><span class="num">94</span> tok</div>
     </div>
+    <div class="note" style="margin-top:1rem">With all 12 memories included instead of 2, the same
+      question costs 1,182 tokens <span class="note">&middot; measured</span></div>
   </div>
 </section>
 
@@ -223,22 +276,37 @@
   <h2>How a memory is stored</h2>
   <p class="lede">A fact is entered as text. The memory system extracts the key detail and stores
   it. It becomes a new row in a table, turned on by default.</p>
-  <div class="flow">
-    <div class="flow-box">
-      <div class="flow-h">Fact</div>
-      <div class="flow-s">&quot;SSO add-on is $199/mo&quot;</div>
-    </div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box">
-      <div class="flow-h">EverOS</div>
-      <div class="flow-s">extracts and stores it</div>
-    </div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-box">
-      <div class="flow-h">Registry row</div>
-      <div class="flow-s">new entry, turned on by default</div>
-    </div>
-  </div>
+  <svg class="flow-svg" viewBox="0 0 900 210" role="img"
+       aria-label="A fact is entered, EverOS extracts and stores it, then it becomes a registry row">
+    <defs>
+      <marker id="arrow-born" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 Z" class="arrowhead"></path>
+      </marker>
+    </defs>
+    <rect class="node-rect" x="0" y="15" width="250" height="175" rx="6"></rect>
+    <rect class="node-rect" x="320" y="15" width="250" height="175" rx="6"></rect>
+    <rect class="node-rect" x="640" y="15" width="250" height="175" rx="6"></rect>
+    <line class="node-arrow" x1="253" y1="102" x2="317" y2="102" marker-end="url(#arrow-born)"></line>
+    <line class="node-arrow" x1="573" y1="102" x2="637" y2="102" marker-end="url(#arrow-born)"></line>
+    <foreignObject x="0" y="15" width="250" height="175">
+      <div xmlns="http://www.w3.org/1999/xhtml" class="node-content">
+        <div class="node-title">Fact</div>
+        <div class="node-body">&quot;Initech signed 2026-08-01; we promised them a 99.99% uptime SLA&quot;</div>
+      </div>
+    </foreignObject>
+    <foreignObject x="320" y="15" width="250" height="175">
+      <div xmlns="http://www.w3.org/1999/xhtml" class="node-content">
+        <div class="node-title">EverOS</div>
+        <div class="node-body">Extracts the memory from the conversation and stores it.</div>
+      </div>
+    </foreignObject>
+    <foreignObject x="640" y="15" width="250" height="175">
+      <div xmlns="http://www.w3.org/1999/xhtml" class="node-content">
+        <div class="node-title">Registry row</div>
+        <div class="node-body">B13 &middot; &quot;Initech SLA (pre-fed)&quot; &middot; turned on by default</div>
+      </div>
+    </foreignObject>
+  </svg>
 </section>
 
 <!-- 4 — RETRIEVED -->
@@ -258,8 +326,17 @@
   </div>
   <div class="seat-block">
     <div class="seat-block-label">Using retrieved memories only &mdash; 2 memories, 244 tokens for this question <span class="note">&middot; measured; the split between memories is estimated</span></div>
-    <div class="seats">
-      <div class="seat">B01</div><div class="seat">B09</div>
+    <div class="rentbars">
+      <div class="rentbar-row">
+        <div class="rentbar-label">B01</div>
+        <div class="rentbar-track"><div class="rentbar-fill" style="width:94.6809%"></div></div>
+        <div class="rentbar-value"><span class="num">89</span> tok</div>
+      </div>
+      <div class="rentbar-row">
+        <div class="rentbar-label">B09</div>
+        <div class="rentbar-track"><div class="rentbar-fill" style="width:100.0000%"></div></div>
+        <div class="rentbar-value"><span class="num">94</span> tok</div>
+      </div>
     </div>
   </div>
 </section>
@@ -271,16 +348,23 @@
   <p class="lede" style="margin-bottom:0">The model's answer is compared to the known correct
   answer. <span class="define"><b>Earned</b> is the number of tokens saved when a memory was the
   reason a question was answered correctly.</span></p>
-  <div class="row top">
-    <div class="stat">
-      <div class="num num-mid">936</div>
-      <div class="stat-label">tokens saved on this question (1,180 with full history &rarr; 244
-      with retrieval) <span class="note">&middot; measured</span></div>
+  <div style="margin-top:2.2rem; max-width:560px;">
+    <div class="bar-row">
+      <div class="bar-label">Full history</div>
+      <div class="bar-track"><div class="bar-fill before" style="width:100%">1,180 tok</div></div>
     </div>
-    <div class="stat">
-      <div class="stat-label" style="margin-top:0">B01 supplied the correct answer, so B01 earns
-      credit for the 936 tokens saved. B09 was also included but wasn't the source of the answer,
-      so it earns nothing on this question.</div>
+    <div class="bar-row">
+      <div class="bar-label">Retrieved only</div>
+      <div class="bar-track"><div class="bar-fill after" style="width:20.678%">244 tok</div></div>
+    </div>
+    <div class="bar-row bracket-row">
+      <div class="bar-label"></div>
+      <div class="bar-track">
+        <div class="bracket-spacer" style="width:20.678%"></div>
+        <div class="bracket" style="width:79.322%">
+          <div class="bracket-label">936 tokens saved &rarr; credited to B01 (earned)</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -294,15 +378,30 @@
       net are an estimated per-memory share of a measured total; earned reflects measured token
       savings.</caption>
     <thead>
-      <tr><th>Memory</th><th class="num">Included</th><th class="num">Rent</th><th class="num">Earned</th><th class="num">Net</th></tr>
+      <tr><th>Memory</th><th class="num">Included</th><th class="num">Rent</th><th class="num">Earned</th><th class="num">Net</th><th>Net, to scale</th></tr>
     </thead>
     <tbody>
-      <tr class="earn"><td class="bundle-id">B06</td><td class="title-cell">Globex Corp residency</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td></tr>
-      <tr class="earn"><td class="bundle-id">B05</td><td class="title-cell">Northwind Traders SLA</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td></tr>
-      <tr class="earn"><td class="bundle-id">B08</td><td class="title-cell">Billing double-charge incident</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0006</td></tr>
-      <tr class="gap-row"><td colspan="5">&nbsp;</td></tr>
-      <tr class="negative"><td class="bundle-id">B09</td><td class="title-cell">Product FAQ (general overview)</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td></tr>
-      <tr class="negative"><td class="bundle-id">B10</td><td class="title-cell">External pricing one-pager</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td></tr>
+      <tr class="earn">
+        <td class="bundle-id">B06</td><td class="title-cell">Globex Corp residency</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td>
+        <td><div class="netbar"><div class="netbar-fill pos" style="width:60.0px"></div></div></td>
+      </tr>
+      <tr class="earn">
+        <td class="bundle-id">B05</td><td class="title-cell">Northwind Traders SLA</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td>
+        <td><div class="netbar"><div class="netbar-fill pos" style="width:59.5px"></div></div></td>
+      </tr>
+      <tr class="earn">
+        <td class="bundle-id">B08</td><td class="title-cell">Billing double-charge incident</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0006</td>
+        <td><div class="netbar"><div class="netbar-fill pos" style="width:58.8px"></div></div></td>
+      </tr>
+      <tr class="gap-row"><td colspan="6">&nbsp;</td></tr>
+      <tr class="negative">
+        <td class="bundle-id">B09</td><td class="title-cell">Product FAQ (general overview)</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td>
+        <td><div class="netbar"><div class="netbar-fill neg" style="width:12.0px"></div></div></td>
+      </tr>
+      <tr class="negative">
+        <td class="bundle-id">B10</td><td class="title-cell">External pricing one-pager</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td>
+        <td><div class="netbar"><div class="netbar-fill neg" style="width:13.4px"></div></div></td>
+      </tr>
     </tbody>
   </table>
 </section>
@@ -313,34 +412,65 @@
   <h2>Removing the ones that don't help</h2>
   <p class="lede">Memories that keep getting included but never help produce a correct answer are
   marked inactive. They stop being added to future prompts. This can be undone.</p>
-  <div class="row top">
-    <div class="prune-card">
-      <div class="pc-id">B09</div>
-      <div class="pc-title">Product FAQ (general overview)</div>
-      <div class="pc-stat">Included 2 times, earned $0.0000</div>
-    </div>
-    <div class="prune-card">
-      <div class="pc-id">B10</div>
-      <div class="pc-title">External pricing one-pager</div>
-      <div class="pc-stat">Included 2 times, earned $0.0000</div>
+  <div class="seat-block">
+    <div class="seat-block-label">Before &mdash; all 12 memories active</div>
+    <div class="seats">
+      <div class="seat">B01</div><div class="seat">B02</div><div class="seat">B03</div><div class="seat">B04</div>
+      <div class="seat">B05</div><div class="seat">B06</div><div class="seat">B07</div><div class="seat">B08</div>
+      <div class="seat">B09</div><div class="seat">B10</div><div class="seat">B11</div><div class="seat">B12</div>
     </div>
   </div>
-  <div class="note" style="margin-top:1.3rem">These are the only two memories in this run that were
-    included more than once and never helped a correct answer.</div>
+  <div class="seat-block">
+    <div class="seat-block-label">After &mdash; B09 and B10 turned off</div>
+    <div class="seats">
+      <div class="seat">B01</div><div class="seat">B02</div><div class="seat">B03</div><div class="seat">B04</div>
+      <div class="seat">B05</div><div class="seat">B06</div><div class="seat">B07</div><div class="seat">B08</div>
+      <div class="seat empty">B09</div><div class="seat empty">B10</div><div class="seat">B11</div><div class="seat">B12</div>
+    </div>
+  </div>
+  <div class="prune-note">Seats stay empty &mdash; prompts get smaller. Nothing moves in to take B09
+    or B10's place.</div>
+  <div class="prune-note">B09 (Product FAQ) and B10 (external pricing one-pager) were each included
+    twice and never the reason a question was answered correctly &mdash; both earned $0.0000.</div>
 </section>
 
 <!-- 8 — THE RESULT -->
 <section class="slide" data-index="8">
   <div class="eyebrow">Result</div>
   <h2>The result</h2>
-  <div class="row top">
-    <div class="stat">
-      <div class="stat-label" style="margin-top:0;margin-bottom:.5rem">Correct answers, out of 8 questions</div>
-      <div class="num num-hero">8/8&nbsp;&rarr;&nbsp;8/8</div>
-      <div class="stat-label">same score, before and after turning off B09 and B10</div>
+  <div class="check-block">
+    <div>
+      <div class="check-row-label">Before</div>
+      <div class="check-row">
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+      </div>
+      <div class="check-row-total">8/8 correct</div>
+    </div>
+    <div>
+      <div class="check-row-label">After</div>
+      <div class="check-row">
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+        <svg viewBox="0 0 20 20"><path class="check-mark" d="M4 10.5 L8.2 14.5 L16 6"></path></svg>
+      </div>
+      <div class="check-row-total">8/8 correct</div>
     </div>
   </div>
-  <div class="bar-row">
+  <div class="note" style="margin-top:.7rem">Same 8 questions, correct both times &mdash; before and
+    after turning off B09 and B10.</div>
+  <div class="bar-row" style="margin-top:1.7rem">
     <div class="bar-label">Before</div>
     <div class="bar-track"><div class="bar-fill before" style="width:100%">205.9 tokens</div></div>
   </div>
@@ -349,7 +479,7 @@
     <div class="bar-track"><div class="bar-fill after" style="width:75.8%">156.1 tokens</div></div>
   </div>
   <div class="row top" style="align-items:baseline; gap:1.2rem;">
-    <div class="num num-mid" style="color:var(--green)">&minus;24.2%</div>
+    <div class="num num-hero" style="color:var(--green)">&minus;24.2%</div>
     <div class="stat-label" style="margin-top:0">average tokens per query, same score <span class="note">&middot; measured, real model calls, gpt-4o-mini</span></div>
   </div>
 </section>
@@ -358,15 +488,54 @@
 <section class="slide" data-index="9">
   <div class="eyebrow">Automation</div>
   <h2>Running this automatically</h2>
-  <p class="lede">The same process can run on a schedule: look for memories that aren't helping,
-  test removing them, and check the score before keeping the change.</p>
-  <div class="loop-line">
-    Check for candidates &rarr; test removing them &rarr; re-run the questions &rarr;
-    <b>keep the change, or undo it automatically if the score drops</b>
+  <p class="lede">The same process can run on a schedule, with no one clicking anything.</p>
+  <svg class="cycle-svg" viewBox="0 0 900 220" role="img"
+       aria-label="Find candidates, verify, remove, re-verify, and restore automatically if the score drops">
+    <defs>
+      <marker id="arrow-cycle" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 Z" class="cycle-arrowhead"></path>
+      </marker>
+      <marker id="arrow-rollback" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 Z" class="rollback-arrowhead"></path>
+      </marker>
+    </defs>
+    <path class="rollback-arc" d="M 787 112 C 787 30, 562 30, 562 112" marker-end="url(#arrow-rollback)"></path>
+    <text class="rollback-label" x="674" y="22" text-anchor="middle">restore if the score drops</text>
+    <line class="cycle-arrow" x1="152" y1="150" x2="297" y2="150" marker-end="url(#arrow-cycle)"></line>
+    <line class="cycle-arrow" x1="377" y1="150" x2="522" y2="150" marker-end="url(#arrow-cycle)"></line>
+    <line class="cycle-arrow" x1="602" y1="150" x2="747" y2="150" marker-end="url(#arrow-cycle)"></line>
+    <circle class="cycle-node" cx="112" cy="150" r="38"></circle>
+    <circle class="cycle-node" cx="337" cy="150" r="38"></circle>
+    <circle class="cycle-node" cx="562" cy="150" r="38"></circle>
+    <circle class="cycle-node" cx="787" cy="150" r="38"></circle>
+    <text class="cycle-num" x="112" y="157" text-anchor="middle">1</text>
+    <text class="cycle-num" x="337" y="157" text-anchor="middle">2</text>
+    <text class="cycle-num" x="562" y="157" text-anchor="middle">3</text>
+    <text class="cycle-num" x="787" y="157" text-anchor="middle">4</text>
+  </svg>
+  <div class="cycle-labels">
+    <div>
+      <div class="cycle-label-title">Find</div>
+      <div class="cycle-label-body">Look for memories included often but never the reason for a correct answer.</div>
+    </div>
+    <div>
+      <div class="cycle-label-title">Verify</div>
+      <div class="cycle-label-body">Run the questions and record the score and cost.</div>
+    </div>
+    <div>
+      <div class="cycle-label-title">Remove</div>
+      <div class="cycle-label-body">Turn off the memories found in step 1.</div>
+    </div>
+    <div>
+      <div class="cycle-label-title">Re-verify</div>
+      <div class="cycle-label-body">Run the questions again and compare.</div>
+    </div>
   </div>
-  <div class="receipt">{"cycle": 1, "action": "clean", "candidates": [], "ts": "2026-08-07T14:39:28"}</div>
-  <div class="note" style="margin-top:.7rem">An actual line from the system's log. &quot;clean&quot;
-    means no memory qualified for removal in this run. &middot; measured</div>
+  <div class="receipt-strip">
+    <div class="receipt-text">{"cycle": 1, "action": "clean", "candidates": [], "ts": "2026-08-07T14:39:28"}</div>
+    <div class="receipt-caption">An actual line from the system's log. &quot;clean&quot; means no
+      memory qualified for removal in this run. &middot; measured</div>
+  </div>
 </section>
 
 <!-- 10 — CLOSE -->
