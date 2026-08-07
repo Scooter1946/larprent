@@ -3,24 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rent — the memory P&amp;L</title>
+<title>Rent</title>
 <style>
   :root{
-    --bg:#0B0F14; --panel:#11161D; --border:#1F2937;
-    --text:#E6EDF3; --muted:#6B7280;
-    --green:#00D26A; --red:#FF4D4F; --amber:#FFB000;
+    --bg:#FAFBFA; --panel:#FFFFFF; --hairline:#E4E7EB;
+    --ink:#171C22; --ink-2:#4B5563; --ink-3:#8A93A0;
+    --green:#1B7F4C; --red:#B3261E;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono","IBM Plex Mono",Menlo,Consolas,monospace;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box;}
-  html,body{height:100%;margin:0;padding:0;background:var(--bg);color:var(--text);}
+  html,body{height:100%;margin:0;padding:0;background:var(--bg);color:var(--ink);}
   body{
     font-family:var(--sans);
     overflow-y:scroll;
     scroll-snap-type:y mandatory;
     scroll-behavior:smooth;
+    -webkit-font-smoothing:antialiased;
   }
-  ::selection{background:var(--green);color:var(--bg);}
+  ::selection{background:#CFE8DA;color:var(--ink);}
 
   .slide{
     min-height:100vh;
@@ -30,211 +31,158 @@
     display:flex;
     flex-direction:column;
     justify-content:center;
-    padding:6vh 7vw;
+    padding:6vh 8vw;
     position:relative;
-    border-top:1px solid var(--border);
-    overflow:hidden;
+    border-top:1px solid var(--hairline);
   }
   .slide:first-child{border-top:none;}
-  .slide::before{
-    content:"";
-    position:absolute; top:0; left:0; right:0; height:4px;
-    background:var(--accent, var(--green));
-  }
-  .slide::after{
-    content:"";
-    position:absolute; inset:0;
-    background:radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--accent, var(--green)) 10%, transparent), transparent 60%);
-    pointer-events:none;
-  }
 
   @media (prefers-reduced-motion: no-preference){
-    .slide{ animation: fadeIn .7s ease both; }
+    .slide{ animation: fadeIn .6s ease both; }
   }
   @keyframes fadeIn{
-    from{ opacity:0; transform:translateY(14px); }
+    from{ opacity:0; transform:translateY(10px); }
     to{ opacity:1; transform:translateY(0); }
   }
 
-  .kicker{
-    font-family:var(--mono);
-    font-size:clamp(.85rem,1.2vw,1.05rem);
-    letter-spacing:.18em;
+  .eyebrow{
+    font-size:clamp(.78rem,1vw,.92rem);
+    letter-spacing:.14em;
     text-transform:uppercase;
-    color:var(--accent, var(--green));
+    color:var(--ink-3);
     font-weight:600;
-    margin:0 0 1.2rem 0;
-    display:flex; align-items:center; gap:.6em;
-  }
-  .kicker .step-n{
-    display:inline-flex; align-items:center; justify-content:center;
-    width:1.8em; height:1.8em; border-radius:50%;
-    border:1.5px solid var(--accent, var(--green));
-    font-size:.9em;
+    margin:0 0 1.3rem 0;
   }
 
-  h1,h2,h3{margin:0; font-weight:700; letter-spacing:-.01em;}
-  h1{font-size:clamp(2.8rem,7.5vw,6rem); line-height:1.02;}
-  h2{font-size:clamp(2rem,5.4vw,3.8rem); line-height:1.05;}
-  .thesis{
-    font-size:clamp(1.3rem,2.6vw,2rem);
-    color:var(--accent, var(--green));
-    font-weight:600;
-    margin-top:1.1rem;
-  }
+  h1,h2{margin:0; font-weight:600; letter-spacing:-.01em; color:var(--ink);}
+  h1{font-size:clamp(3rem,7.5vw,5.5rem); font-weight:700;}
+  h2{font-size:clamp(1.9rem,4.6vw,3.1rem); line-height:1.15;}
+
   p.lede{
-    font-size:clamp(1.1rem,2vw,1.55rem);
-    color:var(--text);
-    max-width:52ch;
+    font-size:clamp(1.05rem,1.7vw,1.35rem);
+    color:var(--ink-2);
+    max-width:56ch;
     margin:1.1rem 0 0 0;
-    line-height:1.45;
+    line-height:1.55;
+    font-weight:400;
   }
   .byline{
-    font-family:var(--mono);
-    font-size:clamp(.9rem,1.3vw,1.1rem);
-    color:var(--muted);
-    margin-top:2.2rem;
+    font-size:clamp(.85rem,1.1vw,1rem);
+    color:var(--ink-3);
+    margin-top:1.8rem;
   }
+  .note{
+    font-size:clamp(.78rem,1vw,.9rem);
+    color:var(--ink-3);
+    font-weight:400;
+  }
+  .define{
+    display:inline;
+    color:var(--ink-2);
+  }
+  .define b{ color:var(--ink); font-weight:600; }
 
   .num{
-    font-family:var(--mono);
     font-variant-numeric:tabular-nums;
-    font-weight:700;
-    letter-spacing:-.02em;
+    font-weight:600;
+    letter-spacing:-.01em;
+    font-family:var(--sans);
   }
-  .num-hero{ font-size:clamp(3.6rem,11vw,8rem); line-height:1; }
-  .num-mid{ font-size:clamp(2.2rem,5vw,4rem); line-height:1; }
+  .num-hero{ font-size:clamp(3.2rem,9vw,6.5rem); line-height:1; font-weight:700; }
+  .num-mid{ font-size:clamp(2rem,4.6vw,3.4rem); line-height:1; }
 
-  .tag{
-    display:inline-block;
-    font-family:var(--mono);
-    font-size:clamp(.72rem,1vw,.85rem);
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    padding:.28em .7em;
-    border-radius:.3em;
-    border:1px solid currentColor;
-  }
-  .tag.measured{ color:var(--green); }
-  .tag.estimated{ color:var(--amber); }
+  .row{ display:flex; gap:2.4rem; flex-wrap:wrap; align-items:flex-start; }
+  .row.top{ margin-top:2.4rem; }
 
-  .row{ display:flex; gap:1.4rem; flex-wrap:wrap; align-items:stretch; }
-  .row.top{ margin-top:2.2rem; }
+  .stat{ min-width:200px; }
+  .stat .num{ color:var(--ink); }
+  .stat .stat-label{ margin-top:.5rem; font-size:.95rem; color:var(--ink-2); max-width:26ch; }
 
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:.6rem;
-    padding:1.4rem 1.6rem;
-  }
-
-  /* ---- flow diagram (slide: BORN) ---- */
-  .flow{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:2.4rem; }
+  /* ---- flow diagram (Born) ---- */
+  .flow{ display:flex; align-items:stretch; gap:1.4rem; flex-wrap:wrap; margin-top:2.6rem; }
   .flow-box{
-    background:var(--panel); border:1px solid var(--border); border-radius:.6rem;
-    padding:1.3rem 1.5rem; min-width:210px; flex:1 1 210px;
+    background:var(--panel); border:1px solid var(--hairline); border-radius:.4rem;
+    padding:1.3rem 1.5rem; min-width:200px; flex:1 1 200px;
   }
-  .flow-box .flow-h{
-    font-family:var(--mono); font-weight:700; font-size:1.15rem; color:var(--text);
-  }
-  .flow-box .flow-s{
-    font-family:var(--mono); font-size:.92rem; color:var(--muted); margin-top:.5rem; line-height:1.4;
-  }
-  .flow-arrow{
-    font-size:2rem; color:var(--accent, var(--green)); flex:0 0 auto; padding:0 .2rem;
-  }
+  .flow-box .flow-h{ font-weight:600; font-size:1.05rem; color:var(--ink); }
+  .flow-box .flow-s{ font-size:.92rem; color:var(--ink-2); margin-top:.55rem; line-height:1.45; }
+  .flow-arrow{ font-size:1.6rem; color:var(--ink-3); flex:0 0 auto; align-self:center; padding:0 .1rem; }
 
-  /* ---- seats diagram (slide: RETRIEVED) ---- */
-  .seats-row{ display:flex; align-items:center; gap:1.2rem; margin-top:1.1rem; flex-wrap:wrap; }
-  .seats-label{ font-family:var(--mono); font-size:1rem; color:var(--muted); width:9.5rem; }
+  /* ---- seats (Retrieved) ---- */
+  .seat-block{ margin-top:1.6rem; }
+  .seat-block + .seat-block{ margin-top:1.9rem; }
+  .seat-block-label{ font-size:.92rem; color:var(--ink-2); margin-bottom:.6rem; }
   .seats{ display:flex; gap:.4rem; flex-wrap:wrap; }
   .seat{
-    width:1.9rem; height:1.9rem; border-radius:.3rem;
+    min-width:2.1rem; height:2.1rem; padding:0 .4rem; border-radius:.25rem;
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--mono); font-size:.7rem; font-weight:700;
-    border:1px solid var(--border);
+    font-size:.72rem; font-weight:600; color:var(--ink-2);
+    border:1px solid var(--hairline); background:var(--panel);
   }
-  .seat.naive{ background:var(--border); color:var(--muted); }
-  .seat.rent{ background:color-mix(in srgb, var(--amber) 22%, var(--panel)); color:var(--amber); border-color:var(--amber); }
 
-  /* ---- leaderboard (slide: RATED) ---- */
-  table.ledger{ width:100%; border-collapse:collapse; margin-top:1.8rem; font-family:var(--mono); }
-  table.ledger caption{ text-align:left; color:var(--muted); font-size:.9rem; margin-bottom:.6rem; }
+  /* ---- ledger table (Rated) ---- */
+  table.ledger{ width:100%; border-collapse:collapse; margin-top:1.8rem; }
+  table.ledger caption{ text-align:left; color:var(--ink-3); font-size:.88rem; margin-bottom:.7rem; font-weight:400; }
   table.ledger th, table.ledger td{
-    text-align:left; padding:.7rem 1rem; font-size:clamp(.85rem,1.5vw,1.15rem);
-    border-bottom:1px solid var(--border);
+    text-align:left; padding:.65rem .9rem; font-size:clamp(.86rem,1.3vw,1.05rem);
+    border-bottom:1px solid var(--hairline);
   }
-  table.ledger th{ color:var(--muted); font-weight:600; text-transform:uppercase; font-size:.78rem; letter-spacing:.08em; }
-  table.ledger td.num, table.ledger th.num{ text-align:right; font-variant-numeric:tabular-nums; }
-  tr.earn td:first-child{ border-left:4px solid var(--green); }
-  tr.freeload td:first-child{ border-left:4px solid var(--red); }
-  tr.earn td.net{ color:var(--green); font-weight:700; }
-  tr.freeload td.net{ color:var(--red); font-weight:700; }
-  tr.earn .badge, tr.freeload .badge{
-    font-size:.72rem; padding:.15em .5em; border-radius:.25em; letter-spacing:.06em;
-  }
-  tr.earn .badge{ background:color-mix(in srgb, var(--green) 18%, transparent); color:var(--green); }
-  tr.freeload .badge{ background:color-mix(in srgb, var(--red) 18%, transparent); color:var(--red); }
+  table.ledger th{ color:var(--ink-3); font-weight:600; text-transform:uppercase; font-size:.74rem; letter-spacing:.07em; }
+  table.ledger td.num, table.ledger th.num{ text-align:right; }
+  tr.gap-row td{ border-bottom:none; padding:.35rem 0; }
+  tr.earn td:first-child{ border-left:2px solid var(--green); }
+  tr.negative td:first-child{ border-left:2px solid var(--red); }
+  tr.earn td.net{ color:var(--green); font-weight:600; }
+  tr.negative td.net{ color:var(--red); font-weight:600; }
+  table.ledger td.title-cell{ color:var(--ink-2); }
+  table.ledger td.bundle-id{ color:var(--ink); font-weight:600; }
 
-  /* ---- prune cards (slide: PRUNED) ---- */
+  /* ---- prune cards (Removing) ---- */
   .prune-card{
-    background:var(--panel); border:1px solid var(--red); border-radius:.6rem;
-    padding:1.3rem 1.5rem; min-width:230px; flex:1 1 230px;
-    display:flex; flex-direction:column; gap:.5rem;
+    background:var(--panel); border:1px solid var(--hairline); border-left:2px solid var(--red);
+    border-radius:.3rem; padding:1.2rem 1.4rem; min-width:230px; flex:1 1 230px;
   }
-  .prune-card .pc-id{ font-family:var(--mono); color:var(--red); font-weight:700; font-size:1.3rem; }
-  .prune-card .pc-title{ font-size:1rem; color:var(--text); }
-  .prune-card .pc-stat{ font-family:var(--mono); font-size:.85rem; color:var(--muted); }
-  .fire{
-    align-self:flex-start; margin-top:.4rem;
-    font-family:var(--mono); font-size:.8rem; font-weight:700; letter-spacing:.1em;
-    color:var(--bg); background:var(--red); padding:.4em .9em; border-radius:.3em;
+  .prune-card .pc-id{ font-weight:600; color:var(--ink); font-size:1.15rem; }
+  .prune-card .pc-title{ font-size:.95rem; color:var(--ink-2); margin-top:.2rem; }
+  .prune-card .pc-stat{ font-size:.85rem; color:var(--ink-3); margin-top:.6rem; }
+
+  /* ---- proof bars ---- */
+  .bar-row{ display:flex; align-items:center; gap:1.1rem; margin-top:1rem; }
+  .bar-label{ font-size:.92rem; color:var(--ink-2); width:5.5rem; flex:0 0 auto; }
+  .bar-track{ flex:1 1 auto; background:#EEF1F0; border-radius:.2rem; height:2.1rem; overflow:hidden; max-width:520px; }
+  .bar-fill{ height:100%; display:flex; align-items:center; padding:0 .8rem; font-weight:600; font-size:.92rem; }
+  .bar-fill.before{ background:#DADFE3; color:var(--ink); }
+  .bar-fill.after{ background:var(--green); color:#fff; }
+
+  /* ---- autopilot ---- */
+  .loop-line{
+    margin-top:1.7rem; font-size:clamp(.92rem,1.4vw,1.08rem); color:var(--ink-2); line-height:1.9;
   }
-
-  /* ---- proof bars (slide: PROOF) ---- */
-  .bar-row{ display:flex; align-items:center; gap:1rem; margin-top:.9rem; }
-  .bar-label{ font-family:var(--mono); font-size:.95rem; color:var(--muted); width:6.5rem; flex:0 0 auto; }
-  .bar-track{ flex:1 1 auto; background:var(--border); border-radius:.3rem; height:2.4rem; overflow:hidden; }
-  .bar-fill{ height:100%; display:flex; align-items:center; padding:0 .8rem; font-family:var(--mono); font-weight:700; color:var(--bg); }
-  .bar-fill.pre{ background:var(--amber); }
-  .bar-fill.post{ background:var(--green); }
-
-  /* ---- autopilot receipt ---- */
+  .loop-line b{ color:var(--ink); font-weight:600; }
   .receipt{
-    font-family:var(--mono); font-size:clamp(.85rem,1.6vw,1.15rem);
-    background:var(--panel); border:1px solid var(--border); border-radius:.5rem;
-    padding:1.2rem 1.4rem; color:var(--green); white-space:pre-wrap; word-break:break-word;
-    margin-top:1.6rem;
+    font-family:var(--mono); font-size:clamp(.78rem,1.3vw,.95rem);
+    background:var(--panel); border:1px solid var(--hairline); border-radius:.3rem;
+    padding:1rem 1.2rem; color:var(--ink-2); white-space:pre-wrap; word-break:break-word;
+    margin-top:1.6rem; max-width:640px;
   }
-  .loop-steps{
-    display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1.6rem;
-    font-family:var(--mono); font-size:clamp(.85rem,1.4vw,1.05rem);
-  }
-  .loop-steps span.step{
-    padding:.5em .9em; border:1px solid var(--border); border-radius:.4em; color:var(--text);
-  }
-  .loop-steps span.arrow{ color:var(--muted); align-self:center; }
-  .loop-steps span.rollback{ border-color:var(--red); color:var(--red); }
 
-  /* ---- close slide ---- */
-  .stack-list{ margin-top:1.6rem; font-family:var(--mono); font-size:clamp(1rem,2vw,1.3rem); color:var(--text); }
-  .stack-list li{ margin-bottom:.4rem; list-style:none; }
-  .stack-list{ padding:0; }
-  .team{
-    margin-top:2.4rem; font-family:var(--mono); font-size:clamp(1.4rem,3vw,2rem);
-    color:var(--green); letter-spacing:.06em; font-weight:700;
+  /* ---- close ---- */
+  .stack-list{ margin:1.5rem 0 0 0; padding:0; list-style:none; font-size:clamp(1rem,1.8vw,1.2rem); color:var(--ink-2); }
+  .stack-list li{ margin-bottom:.35rem; }
+  .wordmark{
+    margin-top:2.6rem; font-size:clamp(1.3rem,2.6vw,1.7rem);
+    color:var(--ink); letter-spacing:.02em; font-weight:700;
   }
 
   .progress{
-    position:fixed; top:1.1rem; right:1.4rem; z-index:10;
-    font-family:var(--mono); font-size:.85rem; letter-spacing:.05em;
-    color:var(--text); background:var(--panel); border:1px solid var(--border);
-    padding:.4em .8em; border-radius:.4em; opacity:.92;
+    position:fixed; top:1.2rem; right:1.5rem; z-index:10;
+    font-size:.82rem; letter-spacing:.03em; font-variant-numeric:tabular-nums;
+    color:var(--ink-2); background:var(--panel); border:1px solid var(--hairline);
+    padding:.35em .75em; border-radius:.25em;
   }
 
   @media (max-width:680px){
     .slide{ padding:5vh 6vw; }
-    .seats-label{ width:auto; }
   }
 </style>
 </head>
@@ -243,188 +191,196 @@
 <div class="progress" id="progress">01 / 10</div>
 
 <!-- 1 — TITLE -->
-<section class="slide" style="--accent:var(--green)" data-index="1">
-  <div class="kicker"><span class="step-n">R</span> RENT — THE MEMORY P&amp;L</div>
+<section class="slide" data-index="1">
+  <div class="eyebrow">Rent</div>
   <h1>Rent</h1>
-  <div class="thesis">Context is capital.</div>
-  <p class="lede">A profit-and-loss ledger for an AI agent's memory — every memory pays rent for the
-  context tokens it occupies, and earns only when it's the evidence behind a right answer.</p>
-  <div class="byline">EverOS memory · Snowflake ledger · built for the token-economy hackathon</div>
+  <p class="lede">A dashboard that tracks what each memory costs an AI agent to use, and whether it
+  helped answer a question correctly. Memories that cost more than they help get turned off.</p>
+  <div class="byline">Built on EverOS memory and a Snowflake ledger.</div>
 </section>
 
 <!-- 2 — THE PROBLEM -->
-<section class="slide" style="--accent:var(--red)" data-index="2">
-  <div class="kicker">The problem</div>
-  <h2>Every retrieved memory occupies paid context — on every call.</h2>
-  <p class="lede">Nobody audits which ones are worth their seat.</p>
+<section class="slide" data-index="2">
+  <div class="eyebrow">The problem</div>
+  <h2>Every memory used in a prompt costs tokens.</h2>
+  <p class="lede">AI agents retrieve memories to help answer questions. Each memory adds tokens to
+  the prompt sent to the model. Most systems don't track which memories are actually worth that cost.</p>
   <div class="row top">
-    <div class="panel">
-      <div class="num num-mid" style="color:var(--red)">1,182</div>
-      <div class="byline" style="margin-top:.5rem">tokens/query · full-history baseline
-        <span class="tag measured" style="margin-left:.6rem">measured</span></div>
+    <div class="stat">
+      <div class="num num-mid">1,182</div>
+      <div class="stat-label">tokens per query, when every memory is included <span class="note">&middot; measured</span></div>
     </div>
-    <div class="panel">
-      <div class="num num-mid" style="color:var(--text)">12</div>
-      <div class="byline" style="margin-top:.5rem">memories seated, whether they help or not</div>
+    <div class="stat">
+      <div class="num num-mid">12</div>
+      <div class="stat-label">memories included in every prompt, in this example</div>
     </div>
   </div>
 </section>
 
 <!-- 3 — BORN -->
-<section class="slide" style="--accent:var(--green)" data-index="3">
-  <div class="kicker"><span class="step-n">1</span> Step 1 — Born</div>
-  <h2>A fact is fed in. It becomes a memory.</h2>
+<section class="slide" data-index="3">
+  <div class="eyebrow">Step 1</div>
+  <h2>How a memory is stored</h2>
+  <p class="lede">A fact is entered as text. The memory system extracts the key detail and stores
+  it. It becomes a new row in a table, turned on by default.</p>
   <div class="flow">
     <div class="flow-box">
-      <div class="flow-h">FACT</div>
-      <div class="flow-s">"SSO add-on is $199/mo"</div>
+      <div class="flow-h">Fact</div>
+      <div class="flow-s">&quot;SSO add-on is $199/mo&quot;</div>
     </div>
     <div class="flow-arrow">&rarr;</div>
     <div class="flow-box">
       <div class="flow-h">EverOS</div>
-      <div class="flow-s">extracts &amp; stores it<br>(remember → flush)</div>
+      <div class="flow-s">extracts and stores it</div>
     </div>
     <div class="flow-arrow">&rarr;</div>
     <div class="flow-box">
-      <div class="flow-h">REGISTRY ROW</div>
-      <div class="flow-s">bundle_id · active = true<br>rent: $0.00 so far</div>
+      <div class="flow-h">Registry row</div>
+      <div class="flow-s">new entry, turned on by default</div>
     </div>
   </div>
 </section>
 
 <!-- 4 — RETRIEVED -->
-<section class="slide" style="--accent:var(--amber)" data-index="4">
-  <div class="kicker"><span class="step-n">2</span> Step 2 — Retrieved</div>
-  <h2>A question arrives. Top-k memories get seated.</h2>
-  <p class="lede">Every seat charges rent — a tokenizer-estimated share of the prompt.</p>
-  <div class="seats-row">
-    <div class="seats-label">full-history</div>
+<section class="slide" data-index="4">
+  <div class="eyebrow">Step 2</div>
+  <h2>What each memory costs</h2>
+  <p class="lede" style="margin-bottom:0">When a question comes in, the system selects a few
+  relevant memories and adds them to the prompt.
+  <span class="define"><b>Rent</b> is what a memory costs when it is included in a prompt.</span></p>
+  <div class="seat-block">
+    <div class="seat-block-label">Using the full conversation history &mdash; 12 memories, 1,182 tokens <span class="note">&middot; measured</span></div>
     <div class="seats">
-      <div class="seat naive">12</div>
-      <div class="seat naive">×</div>
+      <div class="seat">B01</div><div class="seat">B02</div><div class="seat">B03</div><div class="seat">B04</div>
+      <div class="seat">B05</div><div class="seat">B06</div><div class="seat">B07</div><div class="seat">B08</div>
+      <div class="seat">B09</div><div class="seat">B10</div><div class="seat">B11</div><div class="seat">B12</div>
     </div>
-    <div class="byline">1,182 tok/query <span class="tag measured">measured</span></div>
   </div>
-  <div class="seats-row">
-    <div class="seats-label">Rent (top-k)</div>
+  <div class="seat-block">
+    <div class="seat-block-label">Using retrieved memories only &mdash; 2 memories, 244 tokens for this question <span class="note">&middot; measured; the split between memories is estimated</span></div>
     <div class="seats">
-      <div class="seat rent">B01</div>
-      <div class="seat rent">B09</div>
+      <div class="seat">B01</div><div class="seat">B09</div>
     </div>
-    <div class="byline">244 tok, this query <span class="tag measured">measured</span> · split
-      <span class="tag estimated">estimated</span></div>
   </div>
 </section>
 
 <!-- 5 — GRADED -->
-<section class="slide" style="--accent:var(--green)" data-index="5">
-  <div class="kicker"><span class="step-n">3</span> Step 3 — Graded</div>
-  <h2>The answer is checked against gold.</h2>
-  <p class="lede">Only the supporting memory earns — its share of tokens saved vs. the full-context baseline.</p>
+<section class="slide" data-index="5">
+  <div class="eyebrow">Step 3</div>
+  <h2>Whether a memory helped</h2>
+  <p class="lede" style="margin-bottom:0">The model's answer is compared to the known correct
+  answer. <span class="define"><b>Earned</b> is the number of tokens saved when a memory was the
+  reason a question was answered correctly.</span></p>
   <div class="row top">
-    <div class="panel">
-      <div class="byline">B01 — Kanban Board v3 launch</div>
-      <div class="num num-mid" style="color:var(--green)">+936 tok</div>
-      <div class="byline" style="margin-top:.4rem">saved (1,180 &rarr; 244) · correct + supporting
-        <span class="tag measured" style="margin-left:.4rem">measured</span></div>
+    <div class="stat">
+      <div class="num num-mid">936</div>
+      <div class="stat-label">tokens saved on this question (1,180 with full history &rarr; 244
+      with retrieval) <span class="note">&middot; measured</span></div>
     </div>
-    <div class="panel">
-      <div class="byline">B09 — Product FAQ</div>
-      <div class="num num-mid" style="color:var(--red)">$0.0000</div>
-      <div class="byline" style="margin-top:.4rem">retrieved too, not supporting &rarr; earns nothing</div>
+    <div class="stat">
+      <div class="stat-label" style="margin-top:0">B01 supplied the correct answer, so B01 earns
+      credit for the 936 tokens saved. B09 was also included but wasn't the source of the answer,
+      so it earns nothing on this question.</div>
     </div>
   </div>
 </section>
 
 <!-- 6 — RATED -->
-<section class="slide" style="--accent:var(--green)" data-index="6">
-  <div class="kicker"><span class="step-n">4</span> Step 4 — Rated</div>
-  <h2>The ledger updates.</h2>
+<section class="slide" data-index="6">
+  <div class="eyebrow">Step 4</div>
+  <h2>Rent, earned, and net &mdash; totals for each memory</h2>
   <table class="ledger">
-    <caption>one 8-question benchmark pass, pre-prune &middot; $ rent / $ net <span class="tag estimated">estimated</span> split of a <span class="tag measured">measured</span> total</caption>
+    <caption>From the actual benchmark run, 8 questions, before anything is turned off. Rent and
+      net are an estimated per-memory share of a measured total; earned reflects measured token
+      savings.</caption>
     <thead>
-      <tr><th>bundle</th><th class="num">retrieved</th><th class="num">rent</th><th class="num">earned</th><th class="num">net</th></tr>
+      <tr><th>Memory</th><th class="num">Included</th><th class="num">Rent</th><th class="num">Earned</th><th class="num">Net</th></tr>
     </thead>
     <tbody>
-      <tr class="earn"><td>B01 · Kanban Board v3 <span class="badge">EARNING</span></td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0006</td></tr>
-      <tr class="earn"><td>B02 · Automations limits <span class="badge">EARNING</span></td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0006</td></tr>
-      <tr class="freeload"><td>B09 · Product FAQ <span class="badge">FREELOADING</span></td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">-$0.0001</td></tr>
-      <tr class="freeload"><td>B10 · Pricing one-pager <span class="badge">FREELOADING</span></td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">-$0.0001</td></tr>
+      <tr class="earn"><td class="bundle-id">B06</td><td class="title-cell">Globex Corp residency</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td></tr>
+      <tr class="earn"><td class="bundle-id">B05</td><td class="title-cell">Northwind Traders SLA</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0007</td></tr>
+      <tr class="earn"><td class="bundle-id">B08</td><td class="title-cell">Billing double-charge incident</td><td class="num">1</td><td class="num">$0.0001</td><td class="num">$0.0007</td><td class="num net">+$0.0006</td></tr>
+      <tr class="gap-row"><td colspan="5">&nbsp;</td></tr>
+      <tr class="negative"><td class="bundle-id">B09</td><td class="title-cell">Product FAQ (general overview)</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td></tr>
+      <tr class="negative"><td class="bundle-id">B10</td><td class="title-cell">External pricing one-pager</td><td class="num">2</td><td class="num">$0.0001</td><td class="num">$0.0000</td><td class="num net">&minus;$0.0001</td></tr>
     </tbody>
   </table>
 </section>
 
 <!-- 7 — PRUNED -->
-<section class="slide" style="--accent:var(--red)" data-index="7">
-  <div class="kicker"><span class="step-n">5</span> Step 5 — Pruned</div>
-  <h2>Negative-P&amp;L memories get evicted.</h2>
-  <p class="lede">active = false. Seats stay empty — no backfill. Reversible. Audience picks who gets fired.</p>
+<section class="slide" data-index="7">
+  <div class="eyebrow">Step 5</div>
+  <h2>Removing the ones that don't help</h2>
+  <p class="lede">Memories that keep getting included but never help produce a correct answer are
+  marked inactive. They stop being added to future prompts. This can be undone.</p>
   <div class="row top">
     <div class="prune-card">
       <div class="pc-id">B09</div>
       <div class="pc-title">Product FAQ (general overview)</div>
-      <div class="pc-stat">retrieved 2× · earned $0.0000</div>
-      <div class="fire">FIRE</div>
+      <div class="pc-stat">Included 2 times, earned $0.0000</div>
     </div>
     <div class="prune-card">
       <div class="pc-id">B10</div>
-      <div class="pc-title">External Pricing One-Pager</div>
-      <div class="pc-stat">retrieved 2× · earned $0.0000</div>
-      <div class="fire">FIRE</div>
+      <div class="pc-title">External pricing one-pager</div>
+      <div class="pc-stat">Included 2 times, earned $0.0000</div>
     </div>
   </div>
+  <div class="note" style="margin-top:1.3rem">These are the only two memories in this run that were
+    included more than once and never helped a correct answer.</div>
 </section>
 
-<!-- 8 — THE PROOF -->
-<section class="slide" style="--accent:var(--green)" data-index="8">
-  <div class="kicker">The proof</div>
-  <h2>Same score. Fewer tokens.</h2>
+<!-- 8 — THE RESULT -->
+<section class="slide" data-index="8">
+  <div class="eyebrow">Result</div>
+  <h2>The result</h2>
   <div class="row top">
-    <div class="panel">
-      <div class="byline">score, both arms</div>
-      <div class="num num-hero" style="color:var(--text)">8/8&nbsp;&rarr;&nbsp;8/8</div>
+    <div class="stat">
+      <div class="stat-label" style="margin-top:0;margin-bottom:.5rem">Correct answers, out of 8 questions</div>
+      <div class="num num-hero">8/8&nbsp;&rarr;&nbsp;8/8</div>
+      <div class="stat-label">same score, before and after turning off B09 and B10</div>
     </div>
   </div>
   <div class="bar-row">
-    <div class="bar-label">pre-prune</div>
-    <div class="bar-track"><div class="bar-fill pre" style="width:100%">205.9 tok</div></div>
+    <div class="bar-label">Before</div>
+    <div class="bar-track"><div class="bar-fill before" style="width:100%">205.9 tokens</div></div>
   </div>
   <div class="bar-row">
-    <div class="bar-label">post-prune</div>
-    <div class="bar-track"><div class="bar-fill post" style="width:75.8%">156.1 tok</div></div>
+    <div class="bar-label">After</div>
+    <div class="bar-track"><div class="bar-fill after" style="width:75.8%">156.1 tokens</div></div>
   </div>
-  <div class="row top" style="align-items:center; gap:1.4rem;">
-    <div class="num num-mid" style="color:var(--green)">-24.2%</div>
-    <div class="byline">cost/query, identical score
-      <span class="tag measured" style="margin-left:.5rem">measured pre-show run · gpt-4o-mini</span></div>
+  <div class="row top" style="align-items:baseline; gap:1.2rem;">
+    <div class="num num-mid" style="color:var(--green)">&minus;24.2%</div>
+    <div class="stat-label" style="margin-top:0">average tokens per query, same score <span class="note">&middot; measured, real model calls, gpt-4o-mini</span></div>
   </div>
 </section>
 
 <!-- 9 — AUTOPILOT -->
-<section class="slide" style="--accent:var(--amber)" data-index="9">
-  <div class="kicker">Autopilot</div>
-  <h2>The loop runs unattended.</h2>
-  <div class="loop-steps">
-    <span class="step">audit</span><span class="arrow">&rarr;</span>
-    <span class="step">verify</span><span class="arrow">&rarr;</span>
-    <span class="step">prune</span><span class="arrow">&rarr;</span>
-    <span class="step">re-verify</span><span class="arrow">&rarr;</span>
-    <span class="step rollback">auto-rollback if quality dips</span>
+<section class="slide" data-index="9">
+  <div class="eyebrow">Automation</div>
+  <h2>Running this automatically</h2>
+  <p class="lede">The same process can run on a schedule: look for memories that aren't helping,
+  test removing them, and check the score before keeping the change.</p>
+  <div class="loop-line">
+    Check for candidates &rarr; test removing them &rarr; re-run the questions &rarr;
+    <b>keep the change, or undo it automatically if the score drops</b>
   </div>
   <div class="receipt">{"cycle": 1, "action": "clean", "candidates": [], "ts": "2026-08-07T14:39:28"}</div>
-  <div class="byline"><span class="tag measured" style="margin-right:.5rem">measured</span>real audit-log line &middot; captures/autopilot_log.jsonl</div>
+  <div class="note" style="margin-top:.7rem">An actual line from the system's log. &quot;clean&quot;
+    means no memory qualified for removal in this run. &middot; measured</div>
 </section>
 
 <!-- 10 — CLOSE -->
-<section class="slide" style="--accent:var(--green)" data-index="10">
-  <div class="kicker">Close</div>
-  <h2>Costs accrue live.<br>Earnings accrue on evidence.</h2>
+<section class="slide" data-index="10">
+  <div class="eyebrow">Summary</div>
+  <h2>What each memory costs. Whether it helped.</h2>
+  <p class="lede">Rent tracks what each memory costs to use and whether it helps produce correct
+  answers. Memories that cost more than they help get turned off.</p>
   <ul class="stack-list">
     <li>EverOS memory</li>
-    <li>Snowflake / SQLite ledger</li>
-    <li>any LLM</li>
+    <li>Snowflake or SQLite ledger</li>
+    <li>Any LLM</li>
   </ul>
-  <div class="team">RENT</div>
+  <div class="wordmark">RENT</div>
 </section>
 
 <script>
