@@ -1,0 +1,7 @@
+everos-cloud==1.0.0
+jsonschema==4.26.0
+python-dotenv==1.2.2
+snowflake-connector-python==4.7.2
+streamlit==1.61.1
+streamlit-autorefresh==1.0.1
+tiktoken==0.13.0
