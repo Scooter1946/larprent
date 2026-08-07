@@ -554,14 +554,17 @@ def feed_memory(text: str) -> None:
         return
     title = (text[:38] + "…") if len(text) > 38 else text
     bundle_id = seed.upsert_live_bundle(session_id, title)
-    st.markdown(f'<div class="rent-panel rent-countpop" style="border:1px solid {GREEN}">'
-                f'<div class="rent-tile-label" style="color:{GREEN}">Memory born — {bundle_id} '
-                f'(ACTIVE, in the red)</div>'
-                f'<div style="margin-top:6px">{born["content"]}</div>'
-                f'<div class="rent-foot" style="margin-top:6px">EverOS extracted this from what you '
-                f'typed. Every memory starts life ACTIVE and in the red — it has to earn its seat. '
-                f'Query it to watch its first rent charge land on the leaderboard.</div>'
-                f'</div>', unsafe_allow_html=True)
+    # Stashed in session_state (not rendered directly) so the "memory born" panel survives a screen
+    # switch away from "2 · Hire" and back — the call site renders it on every visit, not just this run.
+    st.session_state["fed_memory_html"] = (
+        f'<div class="rent-panel rent-countpop" style="border:1px solid {GREEN}">'
+        f'<div class="rent-tile-label" style="color:{GREEN}">Memory born — {bundle_id} '
+        f'(ACTIVE, in the red)</div>'
+        f'<div style="margin-top:6px">{born["content"]}</div>'
+        f'<div class="rent-foot" style="margin-top:6px">EverOS extracted this from what you '
+        f'typed. Every memory starts life ACTIVE and in the red — it has to earn its seat. '
+        f'Query it to watch its first rent charge land on the leaderboard.</div>'
+        f'</div>')
 
 
 def render_odometer(replay_mode: bool) -> None:
@@ -628,17 +631,56 @@ def render_autopilot_panel(replay_mode: bool) -> None:
 
 
 # --------------------------------------------------------------------------------------------------
-# Layout
+# Layout — 5 screens mirroring plans/PLAN-rent.md's "Demo script (3 minutes)" beats, in order.
 # --------------------------------------------------------------------------------------------------
+SCREENS = ["1 · The P&L", "2 · Hire", "3 · Fire", "4 · Proof", "5 · Autopilot"]
+
+# Presenter cues: (time window, opening line) verbatim/near-verbatim from the plan's demo script —
+# small, muted rehearsal cards, never the source of truth (the plan doc is).
+PRESENTER_CUES = {
+    "1 · The P&L": ("0:20–1:00", "Its rent is what it cost to sit in context; its earnings are the "
+                     "tokens we saved on the one question it actually answered — net is the "
+                     "difference, and it's real, not a guess."),
+    "2 · Hire": ("1:00–1:30", "Every memory starts life in the red — it has to earn its seat."),
+    "3 · Fire": ("1:30–1:45", "Which one dies first? You choose."),
+    "4 · Proof": ("1:45–2:50", "Our fixed regression set retained an identical score at lower cost."),
+    "5 · Autopilot": ("2:50–3:00", "Context is capital. We built the P&L for it — and it does this by itself."),
+}
+
+
+def render_presenter_cue(screen_name: str) -> None:
+    window, line = PRESENTER_CUES[screen_name]
+    st.markdown(f'<div class="rent-foot" style="margin:2px 0 10px">{window} — &ldquo;{line}&rdquo;</div>',
+                unsafe_allow_html=True)
+
+
+def _sidebar_run_info() -> str:
+    """Muted sidebar line: run_id / backend / model — model sourced from the pre capture when present,
+    falling back to the active LLM (snow.LLM) in skeleton stage before any capture exists."""
+    model = None
+    try:
+        model = json.load(open(PRE_CAPTURE)).get("model")
+    except Exception:  # noqa: BLE001 — pre-capture may not exist yet in skeleton stage
+        pass
+    return f"run: {RUN_ID} · backend: {snow.BACKEND} · model: {model or snow.LLM}"
+
+
 REPLAY_MODE = st.sidebar.checkbox("Replay mode (zero external calls)",
                                   value=os.environ.get("RENT_REPLAY_MODE") == "1")
-screen = st.sidebar.radio("Screen", ["Leaderboard", "Regression / Query"])
+st.sidebar.caption(_sidebar_run_info())
+screen = st.sidebar.radio("Screen", SCREENS)
+st.sidebar.caption("Run the demo top to bottom: 1 → 2 → 3 → 4 → 5. Each screen needs at most a "
+                   "click or two — read the muted cue line, click the button(s) below it, then "
+                   "come back here for the next screen.")
 st.session_state.setdefault("pruned", False)
 st.session_state.setdefault("pruned_ids", set())   # replay-mode fire-buttons: audience-picked victims
 
+# Global elements, every screen: title strip + REPLAY badge, then the savings odometer, then the
+# presenter cue for whichever screen is selected. render_footer() closes every screen at the bottom.
 st.markdown(f'<div style="color:{AMBER};font-size:1.1rem;letter-spacing:.14em">RENT — THE MEMORY P&amp;L'
             f'{"  ·  REPLAY" if REPLAY_MODE else ""}</div>', unsafe_allow_html=True)
 render_odometer(REPLAY_MODE)
+render_presenter_cue(screen)
 
 try:
     rows, candidate_ids, idle_ids = load_view(REPLAY_MODE, st.session_state["pruned"])
@@ -647,22 +689,46 @@ except Exception as e:  # noqa: BLE001 — pre-capture / pre-Snowflake skeleton 
     st.warning(f"Ledger view unavailable ({e}). In live mode this needs Snowflake + a benchmarked "
                f"run_id; in replay mode it needs {PRE_CAPTURE} / {POST_CAPTURE}.")
 
-if screen == "Leaderboard":
+if screen == "1 · The P&L":
+    # 0:20–1:00 — the ranked ledger story.
     if rows is not None:
         render_headline(rows)
         render_table(rows)
-        render_red_panel(rows, candidate_ids, REPLAY_MODE)
         render_idle_panel(rows, idle_ids)
 
-    # Feed box (lifecycle beat §1) — LIVE mode only, so replay screens stay identical to before.
-    if not REPLAY_MODE:
-        st.markdown('<div class="rent-tile-label" style="margin-top:14px">Watch a memory get hired</div>',
-                    unsafe_allow_html=True)
+elif screen == "2 · Hire":
+    # 1:00–1:30 — watch a memory get born and pay its first rent.
+    st.markdown('<div class="rent-tile-label">Feed the agent a fact</div>', unsafe_allow_html=True)
+    if REPLAY_MODE:
+        # Feed box is LIVE-only; replay shows the pre-fed fallback panel in its place — same panel
+        # the live path falls back to on an extraction timeout, so the beat never looks broken.
+        _show_prefed_fallback()
+    else:
+        # Pre-filled with the scripted fact — click-through demo needs no typing, but stays editable
+        # for a genuinely live/off-script fact if the presenter wants one.
         fed = st.text_input("Feed the agent a fact", key="feed_text",
-                            placeholder="Initech signed 2026-08-01; we promised them a 99.99% uptime SLA")
+                            value="Initech signed 2026-08-01; we promised them a 99.99% uptime SLA")
         if st.button("Feed the agent") and fed.strip():
             feed_memory(fed.strip())
+        if st.session_state.get("fed_memory_html"):   # survives switching away and back to this screen
+            st.markdown(st.session_state["fed_memory_html"], unsafe_allow_html=True)
 
+    st.markdown("---")
+    st.markdown('<div class="rent-tile-label">Query it back — freeform (live)</div>', unsafe_allow_html=True)
+    if REPLAY_MODE:
+        st.markdown('<div class="rent-foot">freeform queries are live-only — flip Replay mode off on '
+                    'the sidebar to try one.</div>', unsafe_allow_html=True)
+    else:
+        # Pre-filled to match the scripted fact above — click "Run query" with no typing needed.
+        free = st.text_input("Ask anything", key="freeform_q",
+                             value="What uptime did we promise Initech?")
+        if st.button("Run query", key="run_freeform") and free.strip():
+            run_query({"query": free.strip(), "question_id": "freeform"}, REPLAY_MODE, RUN_ID)
+
+elif screen == "3 · Fire":
+    # 1:30–1:45 — audience picks the victim; before/after cost tiles.
+    if rows is not None:
+        render_red_panel(rows, candidate_ids, REPLAY_MODE)
     st.markdown("---")
     if st.button("PRUNE", type="primary"):
         if REPLAY_MODE:
@@ -673,13 +739,10 @@ if screen == "Leaderboard":
             st.session_state["pruned"] = True
         _set_cost_tiles()
         st.rerun()
-
     render_cost_tiles()
-    render_receipts(REPLAY_MODE)
-    render_autopilot_panel(REPLAY_MODE)
-    render_footer()
 
-else:  # Regression / Query
+elif screen == "4 · Proof":
+    # 1:45–2:50 — identical score, lower cost, receipts corroborate.
     st.markdown('<div class="rent-tile-label">Fixed regression set (replayed)</div>',
                 unsafe_allow_html=True)
     try:
@@ -693,17 +756,16 @@ else:  # Regression / Query
     try:
         world = load_world()
         qmap = {q["question_id"]: q for q in world["questions"]}
-        # Freeform (§3) is LIVE-only — replay has no capture for arbitrary text, so it isn't offered.
-        modes = ["Fixed question"] + ([] if REPLAY_MODE else ["Freeform (live)"])
-        qmode = st.radio("Query type", modes, horizontal=True) if len(modes) > 1 else "Fixed question"
-        if qmode == "Freeform (live)":
-            free = st.text_input("Ask anything", key="freeform_q",
-                                 placeholder="e.g. What uptime did we promise Initech?")
-            if st.button("Run query") and free.strip():
-                run_query({"query": free.strip(), "question_id": "freeform"}, REPLAY_MODE, RUN_ID)
-        else:
-            qid = st.selectbox("Question", list(qmap), index=0)
-            if st.button("Run query"):
-                run_query(qmap[qid], REPLAY_MODE, RUN_ID)
+        qid = st.selectbox("Question", list(qmap), index=0)
+        if st.button("Run query", key="run_scripted"):
+            run_query(qmap[qid], REPLAY_MODE, RUN_ID)
     except Exception as e:  # noqa: BLE001
         st.warning(f"query control unavailable ({e}).")
+
+    st.markdown("---")
+    render_receipts(REPLAY_MODE)
+
+else:  # "5 · Autopilot" — closing beat: it does this by itself.
+    render_autopilot_panel(REPLAY_MODE)
+
+render_footer()
