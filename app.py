@@ -36,7 +36,7 @@ import seed     # lifecycle beat: upsert_live_bundle + pre-fed fallback constant
 import snow     # footer: active backend/LLM disclosure
 from rent_fixtures import load_world, normalize
 from benchmark import MODEL, GEN_PARAMS, USER_ID, ENC, SYSTEM_PROMPT, build_naive_prompt  # reused, not duplicated
-from snow import ai_complete, get_conn, MODEL_RATES, USD_PER_CREDIT
+from snow import ai_complete, get_conn, MODEL_RATES, USD_PER_CREDIT, rate_for
 
 # --------------------------------------------------------------------------------------------------
 # Constants / paths
@@ -104,7 +104,7 @@ def load_agg(path: str) -> dict:
     data = json.load(open(path))
     events = data["events"]
     mean_tokens = sum(e["memory"]["prompt_tokens"] for e in events) / len(events)
-    rate = MODEL_RATES[data["model"]]
+    rate = rate_for(data["model"])
     return {"mean_memory_prompt_tokens": mean_tokens,
             "mean_memory_cost_per_query": mean_tokens / 1e6 * rate * USD_PER_CREDIT}
 
@@ -123,7 +123,7 @@ def compute_local_ledger(pre_path: str, post_path: str, world: dict, use_post: b
     so the audience can prune a single candidate on top of the frozen Task-7 decision."""
     data = json.load(open(post_path if use_post else pre_path))
     events = data["events"]
-    rate = MODEL_RATES[data["model"]]
+    rate = rate_for(data["model"])
     support = {q["question_id"]: set(q["supporting_bundle_ids"]) for q in world["questions"]}
     per_bundle = {b["bundle_id"]: {"title": b["title"], "category": b["category"], "is_idle": b["is_idle"],
                                    "total_earned": 0.0, "total_rent": 0.0, "times_retrieved": 0}

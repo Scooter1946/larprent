@@ -73,7 +73,7 @@ def run_arm(arm: str, world: dict, question: dict, run_id: str, phase: str) -> d
     golds = q if isinstance((q := question["gold_answer"]), list) else [q]   # accept a list of accepted forms, primary first
     is_correct = normalize(text) in {normalize(g) for g in golds}
     row = {"run_id": run_id, "phase": phase, "arm": arm, "question_id": question["question_id"],
-           "model": MODEL, "prompt_hash": hashlib.sha256(prompt.encode()).hexdigest(),
+           "model": usage["model"], "prompt_hash": hashlib.sha256(prompt.encode()).hexdigest(),
            "model_answer": text.strip(), "gold_answer": golds[0],   # DB/capture row stays a string — schema and check_demo expect one
            "is_correct": is_correct,
            "prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"]}
@@ -100,7 +100,8 @@ def main():
                "naive": run_arm("naive", world, q, run_id, args.phase),
                "memory": run_arm("memory", world, q, run_id, args.phase)} for q in world["questions"]]
     ledger.run_attribution_sql(run_id, args.phase, model=MODEL)
-    json.dump({"run_id": run_id, "phase": args.phase, "model": MODEL, "events": events},
+    json.dump({"run_id": run_id, "phase": args.phase,
+               "model": (events[0]["memory"]["model"] if events else MODEL), "events": events},
                open(f"captures/replay_{args.phase}.json", "w"), indent=2)
     naive_ok = sum(e["naive"]["is_correct"] for e in events)
     memory_ok = sum(e["memory"]["is_correct"] for e in events)

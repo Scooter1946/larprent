@@ -14,7 +14,7 @@ is TOKENIZER-ESTIMATED.
 
 Self-contained: depends only on snow.py, no dependency on bundles/benchmark.
 """
-from snow import get_conn, MODEL_RATES, USD_PER_CREDIT
+from snow import get_conn, MODEL_RATES, USD_PER_CREDIT, rate_for
 
 
 def clear_run(run_id: str, phase: str) -> None:
@@ -97,7 +97,7 @@ LEFT JOIN supporting_retrieved sr ON sr.question_id = retrieved.question_id;
 def run_attribution_sql(run_id: str, phase: str, model: str = "claude-haiku-4-5") -> None:
     cur = get_conn().cursor()
     cur.execute(ATTRIBUTION_SQL, {"run_id": run_id, "phase": phase,
-                                   "rate": MODEL_RATES[model], "usd_per_credit": USD_PER_CREDIT})
+                                   "rate": rate_for(model), "usd_per_credit": USD_PER_CREDIT})
     cur.connection.commit()
 
 
@@ -152,7 +152,7 @@ def get_live_rent(run_id: str, model: str = "claude-haiku-4-5") -> dict[str, flo
     overlaid on the leaderboard without contaminating show1's P&L, get_prune_candidates (which filters
     phase='pre_prune'), or check_demo (which counts rent_ledger, never touched here). RENT-ONLY: a
     freeform live query has no graded outcome, so a live retrieval can never earn — only pay rent."""
-    rate = MODEL_RATES[model]
+    rate = rate_for(model)
     cur = get_conn().cursor()
     cur.execute("""SELECT bundle_id, COALESCE(SUM(bundle_tokens),0) AS toks
                    FROM retrieval_log WHERE run_id=%(run_id)s AND phase='live'

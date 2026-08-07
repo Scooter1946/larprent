@@ -3,11 +3,14 @@
 Every LLM call still goes through `ai_complete()` (which logs to `llm_call_log`) and every DB touch
 still goes through `get_conn()` — the swap happens INSIDE this module, nowhere else:
 
-  RENT_BACKEND=snowflake (default)  Snowflake tables + Cortex AI_COMPLETE (the EVENT configuration —
-                                    Snowflake usage is a hard hackathon requirement; local mode is a
-                                    dev/dry-run fallback, not a replacement).
-  RENT_BACKEND=local                SQLite file (rent_local.db) behind a paramstyle/DDL-translating
+  RENT_BACKEND=local (default)      SQLite file (rent_local.db) behind a paramstyle/DDL-translating
                                     cursor shim — the rest of the codebase keeps its Snowflake SQL.
+                                    Default per team decision (reported organizer confirmation that
+                                    Snowflake is not a hard requirement — VERIFY in the event Discord).
+  RENT_BACKEND=snowflake            Snowflake tables + Cortex AI_COMPLETE — the sponsor-judging
+                                    configuration: real metering, the ACCOUNT_USAGE receipts panel,
+                                    and Cortex-hosted models. Run this at the event if the account
+                                    works; it is strictly more credible on stage.
 
   RENT_LLM=cortex (default)         Snowflake Cortex AI_COMPLETE with show_details (MEASURED tokens).
   RENT_LLM=openai                   Any OpenAI-compatible endpoint via stdlib urllib —
@@ -189,4 +192,5 @@ def ai_complete(model, prompt, purpose, run_id, user_id=None, session_id=None, a
                  (usage["prompt_tokens"]+usage["completion_tokens"])/1e6*rate_for(logged_model),
                  user_id, session_id, json.dumps({"run_id": run_id, "agent_tag": agent_tag, **(extra or {})})))
     conn.commit()
-    return text, usage
+    usage["model"] = logged_model   # the model that ACTUALLY served — rows/captures must record this,
+    return text, usage              # never the requested constant (they diverge in openai/mock modes)
