@@ -1,6 +1,6 @@
-# Codex Kickoff — LANE A (Data & Economics Engine)
+# Agent Kickoff — LANE A (Data & Economics Engine)
 
-Paste this entire file as your first message to Codex 5.6, working from the repo root.
+Paste this entire file as the first message to your coding agent (Claude Code or Codex), working from the repo root.
 
 ---
 
