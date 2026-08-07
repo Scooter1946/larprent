@@ -195,6 +195,12 @@ def get_prune_candidates_multi(run_id: str, phases: list[str]) -> list[str]:
            AND NOT EXISTS (SELECT 1 FROM rent_ledger l WHERE l.bundle_id=r.bundle_id
                              AND l.run_id=%(run_id)s AND l.earned_dollars > 0)
            AND NOT EXISTS (SELECT 1 FROM fixture_support_map f WHERE f.bundle_id=r.bundle_id)
+           -- Newborn grace period: live-fed memories (category='live_memory') can't earn in this
+           -- demo (they support no scripted question), so without this guard the on-stage audit
+           -- cycle would fire a memory hired seconds earlier. A memory can't be judged before it's
+           -- had a chance to earn; production replaces this with an age/usage threshold.
+           AND NOT EXISTS (SELECT 1 FROM bundle_registry b WHERE b.bundle_id=r.bundle_id
+                             AND b.category='live_memory')
         ORDER BY r.bundle_id""", {"run_id": run_id})
     return [r[0] for r in cur.fetchall()]
 
