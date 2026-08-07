@@ -22,13 +22,17 @@ from dotenv import load_dotenv; load_dotenv()
 
 import json
 import os
+import time
+from uuid import uuid4
 
 import streamlit as st
 
 import bundles
 import ledger
-from rent_fixtures import load_world
-from benchmark import build_memory_prompt, MODEL, GEN_PARAMS, USER_ID  # reused, not duplicated
+import mem      # lifecycle beat: live feed box (remember + verify-loop)
+import seed     # lifecycle beat: upsert_live_bundle + pre-fed fallback constants
+from rent_fixtures import load_world, normalize
+from benchmark import MODEL, GEN_PARAMS, USER_ID, ENC, SYSTEM_PROMPT  # reused, not duplicated
 from snow import ai_complete, get_conn, MODEL_RATES, USD_PER_CREDIT
 
 # --------------------------------------------------------------------------------------------------
@@ -67,6 +71,21 @@ st.markdown(f"""<style>
   .badge-active {{ color: {GREEN}; border: 1px solid {GREEN}; }}
   .badge-pruned {{ color: {RED}; border: 1px solid {RED}; }}
   .rent-foot {{ color: {MUTED}; font-size: 0.78rem; line-height: 1.5; }}
+  /* Motion polish (lifecycle beat §5) — CSS-only, no new deps. st.markdown does not execute <script>,
+     so a JS numeric tween is not reliable here; these keyframes give the count-up "pop", the rent-delta
+     row flash, and the PRUNE badge-color flip as pure CSS animations. */
+  .rent-chip {{ color: {AMBER}; border: 1px solid {AMBER}; border-radius: 999px; padding: 0 6px;
+                font-size: 0.7rem; margin-left: 6px; }}
+  .rent-chip-green {{ color: {GREEN}; border: 1px solid {GREEN}; border-radius: 999px; padding: 0 6px;
+                      font-size: 0.7rem; margin-left: 6px; }}
+  @keyframes rentflash {{ 0% {{ background: rgba(255,176,0,.30); }} 100% {{ background: transparent; }} }}
+  tr.rent-flash td {{ animation: rentflash 1.4s ease-out; }}
+  @keyframes countpop {{ 0% {{ transform: scale(.82); opacity: .15; }}
+                         60% {{ transform: scale(1.06); }} 100% {{ transform: scale(1); opacity: 1; }} }}
+  .rent-countpop {{ display: inline-block; animation: countpop .6s ease-out; }}
+  @keyframes badgeflip {{ 0% {{ box-shadow: 0 0 0 2px {RED} inset; opacity: .35; }}
+                          100% {{ box-shadow: none; opacity: 1; }} }}
+  .badge-pruned {{ animation: badgeflip .8s ease-out; }}
 </style>""", unsafe_allow_html=True)
 
 
@@ -92,10 +111,13 @@ def load_receipts_snapshot() -> list[dict]:
     return json.load(open(RECEIPTS_SNAPSHOT_PATH))
 
 
-def compute_local_ledger(pre_path: str, post_path: str, world: dict, use_post: bool = False) -> dict:
+def compute_local_ledger(pre_path: str, post_path: str, world: dict, use_post: bool = False,
+                         extra_pruned=None) -> dict:
     """Pure-Python reimplementation of ledger.ATTRIBUTION_SQL + get_prune_candidates/get_idle_bundles,
     driven ONLY by captured JSON + the local fixture file. Returns the SAME LEADERBOARD ROW SCHEMA as
-    ledger.get_leaderboard() so app.py never branches on REPLAY_MODE, only the call site does."""
+    ledger.get_leaderboard() so app.py never branches on REPLAY_MODE, only the call site does.
+    `extra_pruned` (a set of bundle_ids) is unioned into pruned_ids — used by replay-mode fire-buttons
+    so the audience can prune a single candidate on top of the frozen Task-7 decision."""
     data = json.load(open(post_path if use_post else pre_path))
     events = data["events"]
     rate = MODEL_RATES[data["model"]]
@@ -136,6 +158,8 @@ def compute_local_ledger(pre_path: str, post_path: str, world: dict, use_post: b
         pruned_ids = set(json.load(open(PRUNE_CANDIDATES_PATH)))  # frozen in Task 7
     else:
         pruned_ids = set()   # pre-prune view: everything active
+    if extra_pruned:
+        pruned_ids = pruned_ids | set(extra_pruned)   # replay fire-buttons: audience-picked victims
     all_supporting_ids = {bid for s in support.values() for bid in s}
     candidates = sorted(bid for bid, n in candidate_hits.items()
                         if n >= 2 and correct_supporting[bid] == 0 and bid not in all_supporting_ids)
@@ -153,11 +177,23 @@ def compute_local_ledger(pre_path: str, post_path: str, world: dict, use_post: b
 def load_view(replay_mode: bool, pruned: bool):
     world = load_world()
     if replay_mode:
-        res = compute_local_ledger(PRE_CAPTURE, POST_CAPTURE, world, use_post=pruned)
+        res = compute_local_ledger(PRE_CAPTURE, POST_CAPTURE, world, use_post=pruned,
+                                   extra_pruned=st.session_state.get("pruned_ids"))
         return res["leaderboard"], res["candidates"], res["idle"]
     # Live: leaderboard numbers are the pre_prune P&L; the active badge reflects the LIVE registry, so
     # it flips the instant PRUNE runs real SQL. Candidates/idle are pre_prune concepts.
     rows = ledger.get_leaderboard(RUN_ID, "pre_prune")
+    # Overlay LIVE rent (phase='live' only) onto the frozen pre_prune P&L — never mixed into show1's
+    # captures, get_prune_candidates, or check_demo. Live retrievals are RENT-ONLY (no earnings).
+    live_rent = ledger.get_live_rent(RUN_ID)
+    live_earned = ledger.get_live_earned(RUN_ID)   # §7: scripted-question live earnings, if any
+    for r in rows:
+        lr = live_rent.get(r["bundle_id"], 0.0)
+        le = live_earned.get(r["bundle_id"], 0.0)
+        r["live_rent"], r["live_earned"] = lr, le
+        r["total_rent"] += lr
+        r["total_earned"] += le
+        r["total_net"] += le - lr
     candidates = ledger.get_prune_candidates(RUN_ID, "pre_prune")
     idle_ids = [b["bundle_id"] for b in ledger.get_idle_bundles(RUN_ID, "pre_prune")]
     return rows, candidates, idle_ids
@@ -182,11 +218,17 @@ def render_table(rows: list[dict]) -> None:
         color = GREEN if r["total_net"] > 0 else RED
         badge = ('<span class="badge badge-active">ACTIVE</span>' if r["active"]
                  else '<span class="badge badge-pruned">PRUNED</span>')
+        lr = r.get("live_rent", 0.0)   # live rent-only charge overlaid this run (0 unless a live query hit it)
+        le = r.get("live_earned", 0.0)   # §7: live earnings from a scripted correct answer, if any
+        chip = f'<span class="rent-chip">+{money(lr, 5)} rent</span>' if lr > 0 else ''
+        earn_chip = (f'<span class="rent-chip-green" title="vs. benchmarked naive baseline">'
+                     f'+{money(le, 5)} earned</span>' if le > 0 else '')
+        tr_cls = ' class="rent-flash"' if (lr > 0 or le > 0) else ''   # flash the row where a live delta landed
         trs.append(
-            f'<tr><td>{rank}</td><td class="l">{r["bundle_id"]}</td><td class="l">{r["title"]}</td>'
+            f'<tr{tr_cls}><td>{rank}</td><td class="l">{r["bundle_id"]}</td><td class="l">{r["title"]}</td>'
             f'<td class="l" style="color:{MUTED}">{r["category"]}</td>'
-            f'<td style="color:{GREEN}">{money(r["total_earned"])}</td>'
-            f'<td style="color:{AMBER}">{money(r["total_rent"])}</td>'
+            f'<td style="color:{GREEN}">{money(r["total_earned"])}{earn_chip}</td>'
+            f'<td style="color:{AMBER}">{money(r["total_rent"])}{chip}</td>'
             f'<td style="color:{color};font-weight:700">{money(r["total_net"])}</td>'
             f'<td>{r["times_retrieved"]}</td><td>{badge}</td></tr>')
     st.markdown(
@@ -196,22 +238,54 @@ def render_table(rows: list[dict]) -> None:
         + "".join(trs) + "</table>", unsafe_allow_html=True)
 
 
-def render_red_panel(rows: list[dict], candidate_ids: list[str]) -> None:
+def _set_cost_tiles() -> None:
+    """Populate the before/after cost tiles from the FROZEN pre/post captures (unchanged by fire vs.
+    all-PRUNE — they always compare the captured runs, per §6)."""
+    try:
+        pre, post = load_agg(PRE_CAPTURE), load_agg(POST_CAPTURE)
+        st.session_state.update(cost_before=pre["mean_memory_cost_per_query"],
+                                cost_after=post["mean_memory_cost_per_query"])
+    except Exception as e:  # noqa: BLE001 — captures may not exist yet in skeleton stage
+        st.info(f"cost tiles need {PRE_CAPTURE} / {POST_CAPTURE} ({e}).")
+
+
+def _fire_bundle(bid: str, replay_mode: bool) -> None:
+    """Prune exactly ONE candidate (audience picks the victim). Both candidates are support-map-guarded
+    decoys, so any choice is safe. Live: real single-bundle SQL. Replay: local pruned_ids set."""
+    if replay_mode:
+        st.session_state["pruned_ids"].add(bid)   # unioned into compute_local_ledger's pruned_ids
+    else:
+        bundles.apply_prune([bid])                # REAL SQL, single bundle, zero LLM calls
+    _set_cost_tiles()
+    st.rerun()
+
+
+def render_red_panel(rows: list[dict], candidate_ids: list[str], replay_mode: bool) -> None:
     by_id = {r["bundle_id"]: r for r in rows}
     st.markdown('<div class="rent-tile-label" style="margin-top:14px">Not paying rent</div>',
                 unsafe_allow_html=True)
     if not candidate_ids:
         st.markdown('<div class="rent-panel">No prune candidates in this run.</div>', unsafe_allow_html=True)
         return
-    lines = []
+    st.markdown('<div class="rent-red rent-panel" style="padding:8px 14px"><span class="rent-foot" '
+                f'style="color:{TEXT}">Audience picks the victim — FIRE one, then PRUNE the rest.</span></div>',
+                unsafe_allow_html=True)
     for bid in candidate_ids:
         r = by_id.get(bid, {})
-        lines.append(
-            f'<div style="margin:4px 0"><b style="color:{RED}">{bid}</b> {r.get("title","")} — '
-            f'retrieved {r.get("times_retrieved",0)} times, paid <b style="color:{AMBER}">'
-            f'{money(r.get("total_rent",0.0))}</b> in rent, earned <b>$0.0000</b> — '
-            f'never supported a correct answer.</div>')
-    st.markdown(f'<div class="rent-panel rent-red">{"".join(lines)}</div>', unsafe_allow_html=True)
+        fired = not r.get("active", True)   # already pruned (live registry flag, or replay pruned_ids)
+        c1, c2 = st.columns([6, 1])
+        with c1:
+            st.markdown(
+                f'<div class="rent-panel rent-red" style="margin:4px 0"><b style="color:{RED}">{bid}</b> '
+                f'{r.get("title","")} — retrieved {r.get("times_retrieved",0)} times, paid '
+                f'<b style="color:{AMBER}">{money(r.get("total_rent",0.0))}</b> in rent, earned '
+                f'<b>$0.0000</b> — never supported a correct answer.</div>', unsafe_allow_html=True)
+        with c2:
+            if fired:
+                st.markdown('<div class="badge badge-pruned" style="text-align:center;margin-top:16px">'
+                            'FIRED</div>', unsafe_allow_html=True)
+            elif st.button(f"FIRE {bid}", key=f"fire_{bid}"):
+                _fire_bundle(bid, replay_mode)
 
 
 def render_idle_panel(rows: list[dict], idle_ids: list[str]) -> None:
@@ -282,7 +356,7 @@ def render_cost_tiles() -> None:
     with col2:
         st.markdown(f"""<div class="rent-panel">
           <div class="rent-tile-label">Est. prompt-input cost / query — after</div>
-          <div class="rent-tile-val" style="color:{GREEN}">{money(after, 5)}
+          <div class="rent-tile-val rent-countpop" style="color:{GREEN}">{money(after, 5)}
           <span style="font-size:1rem;color:{GREEN}"> {delta:+.5f}</span></div></div>""",
                     unsafe_allow_html=True)
     st.caption("our fixed regression set retained an identical score at lower cost")
@@ -305,24 +379,169 @@ def animate_regression_suite(pruned: bool) -> None:
                     unsafe_allow_html=True)
 
 
+def _match_scripted_question(question: dict):
+    """§7: return the fixture question dict if this live query IS one of the 8 scripted eval questions
+    (selectbox pick by id, or freeform text that equals a question's wording) — else None. Only
+    scripted questions have gold answers, so only they can be graded + earn live."""
+    world = load_world()
+    qid = question.get("question_id", "freeform")
+    if qid != "freeform":
+        return next((q for q in world["questions"] if q["question_id"] == qid), None)
+    nq = normalize(question["query"])
+    return next((q for q in world["questions"] if normalize(q["query"]) == nq), None)
+
+
+def _captured_naive_tokens() -> dict:
+    """§7 honesty pin: a live prompt runs ONE arm, so the earnings counterfactual is show1's
+    BENCHMARKED naive baseline — {question_id: naive_prompt_tokens} from the frozen pre_prune capture."""
+    try:
+        data = json.load(open(PRE_CAPTURE))
+        return {e["question_id"]: e["naive"]["prompt_tokens"] for e in data["events"]}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _live_prompt(query: str):
+    """Build a live memory-arm prompt for ANY live query (fixed or freeform), honoring bundles.py's
+    no-backfill freeze + active filter. Content comes from the FIXTURE for fixture bundles (canonical
+    text) and from EVEROS for live-fed bundles that aren't in the fixture file — so a query that
+    retrieves a just-fed memory works and is rent-charged. This replaces benchmark.build_memory_prompt
+    on the live path, which only knows fixture text and would KeyError on a live-fed bundle (B13+).
+    Returns (prompt, hits, bundle_tokens) — the same shape build_memory_prompt returns."""
+    hits = bundles.recall_bundles(query, user_id=USER_ID)   # active-only, no-backfill: [{bundle_id, score, rank}]
+    if not hits:
+        return None, [], {}
+    # a second recall carries the EverOS-extracted text (recall_bundles drops content); map session->bundle
+    raw = mem.recall(query, user_id=USER_ID, top_k=bundles.TOP_K_DEFAULT + bundles.OVERFETCH_PAD,
+                     min_score=bundles.MIN_SCORE)
+    reg = bundles.get_session_to_bundle_map()
+    content_by_bundle = {}
+    for ep in raw:
+        info = reg.get(ep["session_id"])
+        if info and info["bundle_id"] not in content_by_bundle:
+            content_by_bundle[info["bundle_id"]] = ep.get("content") or ""
+    fixture_by_id = {b["bundle_id"]: b for b in load_world()["bundles"]}
+    ids = sorted({h["bundle_id"] for h in hits})
+    blocks, bundle_tokens = {}, {}
+    for bid in ids:
+        if bid in fixture_by_id:
+            b = fixture_by_id[bid]
+            block = f"[{bid}] {b['title']}\n{b['content']}"
+        else:
+            block = f"[{bid}] (live-fed)\n{content_by_bundle.get(bid, '')}"   # EverOS-extracted text
+        blocks[bid] = block
+        bundle_tokens[bid] = len(ENC.encode(block))   # tokenizer-estimated rent basis, same as benchmark
+    ctx = "\n\n".join(blocks[i] for i in ids)   # <=6 short bundles: well under the 8K cap, no capping needed
+    prompt = f"{SYSTEM_PROMPT}\n\nCONTEXT:\n{ctx}\n\nQUESTION: {query}\nANSWER:"
+    return prompt, hits, bundle_tokens
+
+
 def run_query(question: dict, replay_mode: bool, run_id: str) -> None:
+    qid = question.get("question_id", "freeform")
     if replay_mode:
-        ev = next(e for e in json.load(open(POST_CAPTURE))["events"]
-                  if e["question_id"] == question["question_id"])
+        # Only the fixed regression questions have a capture to replay; freeform is live-only and is
+        # not offered in replay mode, so this branch always has a matching event.
+        ev = next((e for e in json.load(open(POST_CAPTURE))["events"] if e["question_id"] == qid), None)
+        if ev is None:
+            st.warning("freeform queries run live only — replay has no captured event for them.")
+            return
         r = ev["memory"]
         st.markdown(f'<div class="rent-panel"><b style="color:{AMBER}">REPLAYED</b> — {question["query"]}'
                     f'<br>&rarr; <b>{r["model_answer"]}</b><br>'
                     f'<span style="color:{MUTED}">context: {r["context_bundle_ids"]}, '
                     f'{r["prompt_tokens"]} prompt tokens</span></div>', unsafe_allow_html=True)
-    else:
-        prompt, hits, _ = build_memory_prompt(load_world(), question)   # reflects the PRUNED registry
-        text, usage = ai_complete(MODEL, prompt, purpose="rent_eval_live", run_id=run_id,
-                                  user_id=USER_ID, agent_tag="rent:memory:live", model_parameters=GEN_PARAMS,
-                                  extra={"question_id": question["question_id"]})
-        st.markdown(f'<div class="rent-panel"><b style="color:{GREEN}">LIVE</b> — {question["query"]}'
-                    f'<br>&rarr; <b>{text.strip()}</b><br>'
-                    f'<span style="color:{MUTED}">context: {[h["bundle_id"] for h in hits]}, '
-                    f'{usage["prompt_tokens"]} prompt tokens</span></div>', unsafe_allow_html=True)
+        return
+    prompt, hits, bundle_tokens = _live_prompt(question["query"])   # fixture text for fixture bundles, EverOS text for live-fed
+    if not hits:   # nothing cleared the min_score gate — the honest miss (the gate working IS the feature)
+        st.markdown(f'<div class="rent-panel"><b style="color:{AMBER}">LIVE</b> — {question["query"]}'
+                    f'<br>&rarr; <b>no memory pays rent on that — I don\'t know.</b><br>'
+                    f'<span style="color:{MUTED}">retrieval returned nothing above the score gate.</span>'
+                    f'</div>', unsafe_allow_html=True)
+        return
+    text, usage = ai_complete(MODEL, prompt, purpose="rent_eval_live", run_id=run_id,
+                              user_id=USER_ID, agent_tag="rent:memory:live", model_parameters=GEN_PARAMS,
+                              extra={"question_id": qid})
+    # Real Snowflake retrieval row, phase='live' (the RENT basis) — isolated from show1's pre/post P&L
+    # and from get_prune_candidates / check_demo (both scoped to phase='pre_prune').
+    ledger.insert_retrieval_log(run_id, "live", qid, hits, bundle_tokens)
+    # §7 (optional): a SCRIPTED eval question answered correctly also EARNS live — savings basis is the
+    # question's CAPTURED naive baseline (a live prompt runs one arm), even-split across supporting
+    # bundles retrieved. Freeform non-eval questions stay rent-only (no gold -> no earnings, by design).
+    earned_note = "rent-only (no graded outcome to earn on)"
+    scripted = _match_scripted_question(question)
+    if scripted is not None:
+        golds = scripted["gold_answer"] if isinstance(scripted["gold_answer"], list) else [scripted["gold_answer"]]
+        if normalize(text) in {normalize(g) for g in golds}:
+            naive_base = _captured_naive_tokens().get(scripted["question_id"])
+            sup_hits = [h["bundle_id"] for h in hits if h["bundle_id"] in set(scripted["supporting_bundle_ids"])]
+            if naive_base and sup_hits:
+                saved = max(naive_base - usage["prompt_tokens"], 0)
+                per = saved / len(sup_hits) / 1e6 * MODEL_RATES[MODEL] * USD_PER_CREDIT
+                for bid in sup_hits:
+                    ledger.insert_live_earning(run_id, scripted["question_id"], bid, per)
+                earned_note = (f"CORRECT — {', '.join(sup_hits)} earned {money(per * len(sup_hits), 6)} "
+                               f"vs. benchmarked naive baseline")
+    st.markdown(f'<div class="rent-panel"><b style="color:{GREEN}">LIVE</b> — {question["query"]}'
+                f'<br>&rarr; <b>{text.strip()}</b><br>'
+                f'<span style="color:{MUTED}">context: {[h["bundle_id"] for h in hits]}, '
+                f'{usage["prompt_tokens"]} prompt tokens — {earned_note}</span></div>',
+                unsafe_allow_html=True)
+
+
+def _show_prefed_fallback() -> None:
+    """Timeout/failure path for the feed box: pivot to the pre-fed Initech memory (seed.py --prefeed).
+    Never raises — worst case it shows the known fact text."""
+    try:
+        hits = mem.recall(seed.PREFEED_FACT, user_id=USER_ID, top_k=12)
+        m = next((h for h in hits if h["session_id"] == seed.PREFEED_SESSION), None)
+        content = m["content"] if m and m.get("content") else seed.PREFEED_FACT
+    except Exception:  # noqa: BLE001
+        content = seed.PREFEED_FACT
+    st.markdown(f'<div class="rent-panel" style="border:1px solid {AMBER}">'
+                f'<div class="rent-tile-label" style="color:{AMBER}">Pre-fed memory (fallback)</div>'
+                f'<div style="margin-top:6px">{content}</div>'
+                f"<div class=\"rent-foot\" style=\"margin-top:6px\">extraction queued — using this "
+                f"morning's pre-fed memory.</div></div>", unsafe_allow_html=True)
+
+
+def feed_memory(text: str) -> None:
+    """Live-mode only (§1): feed one fact, poll until EverOS has extracted+indexed it (~10s verify-loop
+    mirroring seed.py), register it as a new bundle, and show the EXTRACTED text — what EverOS distilled,
+    not what was typed. Never crashes or blocks: on timeout/error it falls back to the pre-fed memory."""
+    session_id = f"live-fed-{uuid4().hex[:6]}"
+    try:
+        mem.remember(session_id=session_id,
+                     messages=[{"sender_id": USER_ID, "role": "user", "content": text}])
+    except Exception as e:  # noqa: BLE001
+        st.warning(f"feed failed to enqueue ({e}) — using this morning's pre-fed memory.")
+        _show_prefed_fallback()
+        return
+    born = None
+    with st.spinner("EverOS extracting the memory…"):
+        deadline = time.time() + 10   # ~10s; do NOT raise past 15s without escalating (per prompt)
+        while time.time() < deadline:
+            try:
+                hits = mem.recall(text, user_id=USER_ID, top_k=12)
+            except Exception:  # noqa: BLE001
+                hits = []
+            born = next((h for h in hits if h["session_id"] == session_id), None)
+            if born:
+                break
+            time.sleep(1.0)
+    if born is None:
+        st.warning("extraction queued — using this morning's pre-fed memory.")
+        _show_prefed_fallback()
+        return
+    title = (text[:38] + "…") if len(text) > 38 else text
+    bundle_id = seed.upsert_live_bundle(session_id, title)
+    st.markdown(f'<div class="rent-panel rent-countpop" style="border:1px solid {GREEN}">'
+                f'<div class="rent-tile-label" style="color:{GREEN}">Memory born — {bundle_id} '
+                f'(ACTIVE, in the red)</div>'
+                f'<div style="margin-top:6px">{born["content"]}</div>'
+                f'<div class="rent-foot" style="margin-top:6px">EverOS extracted this from what you '
+                f'typed. Every memory starts life ACTIVE and in the red — it has to earn its seat. '
+                f'Query it to watch its first rent charge land on the leaderboard.</div>'
+                f'</div>', unsafe_allow_html=True)
 
 
 # --------------------------------------------------------------------------------------------------
@@ -332,6 +551,7 @@ REPLAY_MODE = st.sidebar.checkbox("Replay mode (zero external calls)",
                                   value=os.environ.get("RENT_REPLAY_MODE") == "1")
 screen = st.sidebar.radio("Screen", ["Leaderboard", "Regression / Query"])
 st.session_state.setdefault("pruned", False)
+st.session_state.setdefault("pruned_ids", set())   # replay-mode fire-buttons: audience-picked victims
 
 st.markdown(f'<div style="color:{AMBER};font-size:1.1rem;letter-spacing:.14em">RENT — THE MEMORY P&amp;L'
             f'{"  ·  REPLAY" if REPLAY_MODE else ""}</div>', unsafe_allow_html=True)
@@ -347,8 +567,17 @@ if screen == "Leaderboard":
     if rows is not None:
         render_headline(rows)
         render_table(rows)
-        render_red_panel(rows, candidate_ids)
+        render_red_panel(rows, candidate_ids, REPLAY_MODE)
         render_idle_panel(rows, idle_ids)
+
+    # Feed box (lifecycle beat §1) — LIVE mode only, so replay screens stay identical to before.
+    if not REPLAY_MODE:
+        st.markdown('<div class="rent-tile-label" style="margin-top:14px">Watch a memory get hired</div>',
+                    unsafe_allow_html=True)
+        fed = st.text_input("Feed the agent a fact", key="feed_text",
+                            placeholder="Initech signed 2026-08-01; we promised them a 99.99% uptime SLA")
+        if st.button("Feed the agent") and fed.strip():
+            feed_memory(fed.strip())
 
     st.markdown("---")
     if st.button("PRUNE", type="primary"):
@@ -358,12 +587,7 @@ if screen == "Leaderboard":
             candidates = json.load(open(PRUNE_CANDIDATES_PATH))   # frozen in Task 7
             bundles.apply_prune(candidates)                       # REAL SQL, live, zero LLM calls
             st.session_state["pruned"] = True
-        try:
-            pre, post = load_agg(PRE_CAPTURE), load_agg(POST_CAPTURE)
-            st.session_state.update(cost_before=pre["mean_memory_cost_per_query"],
-                                    cost_after=post["mean_memory_cost_per_query"])
-        except Exception as e:  # noqa: BLE001 — captures may not exist yet in skeleton stage
-            st.info(f"cost tiles need {PRE_CAPTURE} / {POST_CAPTURE} ({e}).")
+        _set_cost_tiles()
         st.rerun()
 
     render_cost_tiles()
@@ -384,8 +608,17 @@ else:  # Regression / Query
     try:
         world = load_world()
         qmap = {q["question_id"]: q for q in world["questions"]}
-        qid = st.selectbox("Question", list(qmap), index=0)
-        if st.button("Run query"):
-            run_query(qmap[qid], REPLAY_MODE, RUN_ID)
+        # Freeform (§3) is LIVE-only — replay has no capture for arbitrary text, so it isn't offered.
+        modes = ["Fixed question"] + ([] if REPLAY_MODE else ["Freeform (live)"])
+        qmode = st.radio("Query type", modes, horizontal=True) if len(modes) > 1 else "Fixed question"
+        if qmode == "Freeform (live)":
+            free = st.text_input("Ask anything", key="freeform_q",
+                                 placeholder="e.g. What uptime did we promise Initech?")
+            if st.button("Run query") and free.strip():
+                run_query({"query": free.strip(), "question_id": "freeform"}, REPLAY_MODE, RUN_ID)
+        else:
+            qid = st.selectbox("Question", list(qmap), index=0)
+            if st.button("Run query"):
+                run_query(qmap[qid], REPLAY_MODE, RUN_ID)
     except Exception as e:  # noqa: BLE001
         st.warning(f"query control unavailable ({e}).")

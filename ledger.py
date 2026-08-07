@@ -146,6 +146,40 @@ def get_idle_bundles(run_id: str, phase: str) -> list[dict]:
     return _rows_as_dicts(cur)
 
 
+def get_live_rent(run_id: str, model: str = "claude-haiku-4-5") -> dict[str, float]:
+    """Per-bundle rent (tokenizer-estimated) accrued by LIVE queries only — retrieval_log rows with
+    phase='live'. Kept STRICTLY separate from the frozen pre_prune/post_prune captures so it can be
+    overlaid on the leaderboard without contaminating show1's P&L, get_prune_candidates (which filters
+    phase='pre_prune'), or check_demo (which counts rent_ledger, never touched here). RENT-ONLY: a
+    freeform live query has no graded outcome, so a live retrieval can never earn — only pay rent."""
+    rate = MODEL_RATES[model]
+    cur = get_conn().cursor()
+    cur.execute("""SELECT bundle_id, COALESCE(SUM(bundle_tokens),0) AS toks
+                   FROM retrieval_log WHERE run_id=%(run_id)s AND phase='live'
+                   GROUP BY bundle_id""", {"run_id": run_id})
+    return {bid: toks / 1e6 * rate * USD_PER_CREDIT for bid, toks in cur.fetchall()}
+
+
+def insert_live_earning(run_id: str, question_id: str, bundle_id: str, earned_dollars: float) -> None:
+    """§7 (optional): record LIVE earnings for a scripted eval question answered correctly on stage,
+    as a phase='live' rent_ledger row. Isolated from show1's frozen P&L — get_leaderboard and
+    get_prune_candidates both scope to phase='pre_prune', so these rows never move the pruned decision
+    or the captured numbers; they are read back only by get_live_earned() for the on-screen overlay."""
+    conn = get_conn(); cur = conn.cursor()
+    cur.execute("""INSERT INTO rent_ledger (run_id, phase, bundle_id, question_id, arm, earned_dollars)
+                   VALUES (%s,'live',%s,%s,'memory',%s)""", (run_id, bundle_id, question_id, earned_dollars))
+    conn.commit()
+
+
+def get_live_earned(run_id: str) -> dict[str, float]:
+    """§7: per-bundle LIVE earnings (phase='live' rent_ledger rows) for the leaderboard overlay."""
+    cur = get_conn().cursor()
+    cur.execute("""SELECT bundle_id, COALESCE(SUM(earned_dollars),0) AS earned
+                   FROM rent_ledger WHERE run_id=%(run_id)s AND phase='live'
+                   GROUP BY bundle_id""", {"run_id": run_id})
+    return {bid: float(earned) for bid, earned in cur.fetchall()}
+
+
 # Exact retrieval-design matrix from Fixtures spec, as data — this is the real gate, not aggregate counts.
 EXPECTED_RETRIEVAL = {
     "B01": {"Q1"}, "B02": {"Q2"}, "B03": {"Q3"}, "B04": {"Q4"},

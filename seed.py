@@ -17,6 +17,12 @@ from bundles import reset_active_all
 from rent_fixtures import load_world
 from snow import get_conn
 
+# Pre-fed fallback fact (Lane B lifecycle beat §4): fed via `python seed.py --prefeed` during pre-show
+# prep so the on-stage demo NEVER depends on live extraction. If the live feed stalls, the presenter
+# pivots to this memory with the fallback line.
+PREFEED_FACT = "Initech signed 2026-08-01; we promised them a 99.99% uptime SLA"
+PREFEED_SESSION = "prefed-initech"
+
 
 def upsert_registry_row(bundle: dict, session_id: str) -> None:
     conn = get_conn(); cur = conn.cursor()
@@ -28,6 +34,34 @@ def upsert_registry_row(bundle: dict, session_id: str) -> None:
         {"bid": bundle["bundle_id"], "sid": session_id, "title": bundle["title"],
          "cat": bundle["category"], "idle": bundle["is_idle"]})
     conn.commit()
+
+
+def _next_bundle_id() -> str:
+    """Next free B## id (B13, B14, ...) beyond whatever bundle_registry already holds."""
+    cur = get_conn().cursor()
+    cur.execute("SELECT bundle_id FROM bundle_registry")
+    nums = []
+    for (bid,) in cur.fetchall():
+        if bid and bid[0] in ("B", "b"):
+            try:
+                nums.append(int(bid[1:]))
+            except ValueError:
+                pass
+    return f"B{(max(nums) + 1) if nums else 1:02d}"
+
+
+def upsert_live_bundle(session_id: str, title: str) -> str:
+    """Register a live-fed memory as a NEW bundle (category 'live_memory', active, non-idle). Used by
+    app.py's feed box and by --prefeed. Idempotent per session_id: reuses the existing bundle_id if
+    this session is already registered, else auto-assigns the next free B## (B13, B14, ...). Returns
+    the assigned bundle_id."""
+    cur = get_conn().cursor()
+    cur.execute("SELECT bundle_id FROM bundle_registry WHERE session_id=%s", (session_id,))
+    row = cur.fetchone()
+    bundle_id = row[0] if row else _next_bundle_id()
+    upsert_registry_row({"bundle_id": bundle_id, "title": title, "category": "live_memory",
+                         "is_idle": False}, session_id)
+    return bundle_id
 
 
 def seed_bundle(bundle: dict, user_id: str) -> None:
@@ -52,6 +86,26 @@ def reseed_bundle(bundle_id: str) -> None:
     seed_bundle(b, world["user_id"])
 
 
+def prefeed() -> str:
+    """--prefeed: feed one KNOWN fact through the exact same remember -> verify -> register path the
+    live feed box uses, so the on-stage demo never depends on live extraction. Returns the assigned
+    bundle_id. Idempotent (scoped delete + re-add, reused session_id)."""
+    world = load_world()
+    user_id = world["user_id"]
+    try:
+        mem.delete(user_id=user_id, session_id=PREFEED_SESSION)   # idempotent re-prefeed
+    except Exception:
+        pass
+    mem.remember(session_id=PREFEED_SESSION,
+                 messages=[{"sender_id": user_id, "role": "user", "content": PREFEED_FACT}])
+    episodes = mem.recall(PREFEED_FACT, user_id=user_id, top_k=12)
+    if not any(ep["session_id"] == PREFEED_SESSION for ep in episodes):
+        raise RuntimeError("prefeed verify FAILED: Initech memory not retrievable after flush")
+    bundle_id = upsert_live_bundle(PREFEED_SESSION, "Initech SLA (pre-fed)")
+    print(f"prefeed OK: {bundle_id} <- session {PREFEED_SESSION} ('{PREFEED_FACT}')")
+    return bundle_id
+
+
 def seed_support_map(world: dict) -> None:
     conn = get_conn(); cur = conn.cursor()
     cur.execute("DELETE FROM fixture_support_map")   # idempotent: clear before repopulating
@@ -72,7 +126,9 @@ def main():
 
 
 if __name__ == "__main__":
-    if "--restore-active" in sys.argv:
+    if "--prefeed" in sys.argv:
+        prefeed()   # pre-show: register the Initech fallback memory (never touches show1 captures/ledger)
+    elif "--restore-active" in sys.argv:
         reset_active_all()   # ONLY the active flag — EverOS content, show1 captures, and ledger rows untouched
         print("bundle_registry: all 12 bundles restored to active=TRUE (show1's captures/ledger rows untouched)")
     elif "--reset" in sys.argv:
