@@ -70,7 +70,11 @@ non-negotiable.
    normalize-in-set check) and, on a correct answer, also write the earnings side into the
    phase='live' slice (same even-split-across-supporting rule). The leaderboard then shows a memory
    EARNING live on stage — the Q&A killer when a judge asks a scripted question themselves.
-   Freeform non-eval questions stay rent-only (no gold → no earnings → that's the worldview, not a gap).
+   HONESTY PIN: earnings need a counterfactual, and a live prompt runs only one arm — so the
+   savings basis is the question's CAPTURED naive baseline from show1 (naive_prompt_tokens from the
+   pre_prune capture) minus the LIVE memory prompt tokens, and the delta chip is labeled
+   "vs. benchmarked naive baseline". Freeform non-eval questions stay rent-only (no gold → no
+   earnings → that's the worldview, not a gap).
 
 ## Demo-script placement (update the two lines in plans/PLAN-rent.md's demo script if needed)
 The beat runs ~1:00–1:30: feed → "memory born" panel → freeform query answers from it → its first
