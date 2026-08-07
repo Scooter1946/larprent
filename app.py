@@ -22,6 +22,8 @@ from dotenv import load_dotenv; load_dotenv()
 
 import json
 import os
+import subprocess
+import sys
 import time
 from uuid import uuid4
 
@@ -32,7 +34,7 @@ import ledger
 import mem      # lifecycle beat: live feed box (remember + verify-loop)
 import seed     # lifecycle beat: upsert_live_bundle + pre-fed fallback constants
 from rent_fixtures import load_world, normalize
-from benchmark import MODEL, GEN_PARAMS, USER_ID, ENC, SYSTEM_PROMPT  # reused, not duplicated
+from benchmark import MODEL, GEN_PARAMS, USER_ID, ENC, SYSTEM_PROMPT, build_naive_prompt  # reused, not duplicated
 from snow import ai_complete, get_conn, MODEL_RATES, USD_PER_CREDIT
 
 # --------------------------------------------------------------------------------------------------
@@ -464,6 +466,12 @@ def run_query(question: dict, replay_mode: bool, run_id: str) -> None:
     # Real Snowflake retrieval row, phase='live' (the RENT basis) — isolated from show1's pre/post P&L
     # and from get_prune_candidates / check_demo (both scoped to phase='pre_prune').
     ledger.insert_retrieval_log(run_id, "live", qid, hits, bundle_tokens)
+    # Savings odometer: what this query WOULD have cost with the full 12-bundle fixture context,
+    # tokenizer-counted (zero extra LLM calls, ESTIMATED label) minus the measured actual prompt.
+    naive_est = len(ENC.encode(build_naive_prompt(load_world(), {"query": question["query"]})[0]))
+    saved_est = max(naive_est - usage["prompt_tokens"], 0)
+    st.session_state["odo_tokens"] = st.session_state.get("odo_tokens", 0) + saved_est
+    st.session_state["odo_last"] = saved_est
     # §7 (optional): a SCRIPTED eval question answered correctly also EARNS live — savings basis is the
     # question's CAPTURED naive baseline (a live prompt runs one arm), even-split across supporting
     # bundles retrieved. Freeform non-eval questions stay rent-only (no gold -> no earnings, by design).
@@ -544,6 +552,69 @@ def feed_memory(text: str) -> None:
                 f'</div>', unsafe_allow_html=True)
 
 
+def render_odometer(replay_mode: bool) -> None:
+    """The centerpiece number: cumulative savings. Two labeled sources, never conflated —
+    the eval set's MEASURED savings (from the pre capture) and, in live mode, the session's
+    ESTIMATED savings ticker (tokenizer naive-baseline minus measured actual, per live query)."""
+    try:
+        pre = json.load(open(PRE_CAPTURE))["events"]
+        eval_saved = sum(e["naive"]["prompt_tokens"] - e["memory"]["prompt_tokens"] for e in pre)
+    except Exception:  # noqa: BLE001 — skeleton stage
+        eval_saved = None
+    odo = st.session_state.get("odo_tokens", 0)
+    odo_usd = odo / 1e6 * MODEL_RATES[MODEL] * USD_PER_CREDIT
+    last = st.session_state.get("odo_last")
+    pop = ' rent-countpop' if last else ''
+    delta_chip = f'<span style="font-size:1rem;color:{GREEN}"> +{last:,}</span>' if last else ''
+    live_html = "" if replay_mode else (
+        f'<div class="rent-tile-label" style="margin-top:4px">Saved this session — live queries</div>'
+        f'<div class="rent-headline{pop}">{odo:,} tok <span style="font-size:1.6rem">({money(odo_usd, 5)})</span>'
+        f'{delta_chip}</div>'
+        f'<div class="rent-foot">estimated vs full-context baseline (tokenizer) — climbs faster after PRUNE</div>')
+    eval_html = ("" if eval_saved is None else
+                 f'<div class="rent-foot" style="margin-top:6px">eval set: {eval_saved:,} prompt tokens '
+                 f'saved vs naive — <b style="color:{TEXT}">measured</b> (8-question paired benchmark)</div>')
+    if live_html or eval_html:
+        st.markdown(f'<div class="rent-panel">{live_html}{eval_html}</div>', unsafe_allow_html=True)
+
+
+AUTOPILOT_LOG = "captures/autopilot_log.jsonl"
+
+
+def render_autopilot_panel(replay_mode: bool) -> None:
+    """Activity feed from autopilot's audit log + the on-stage 'run one real cycle' button (live only).
+    Replay mode renders the committed log file — zero external calls."""
+    st.markdown('<div class="rent-tile-label" style="margin-top:14px">Autopilot — self-pruning audit</div>',
+                unsafe_allow_html=True)
+    lines = []
+    try:
+        entries = [json.loads(l) for l in open(AUTOPILOT_LOG)][-8:]
+        for e in reversed(entries):
+            act = e.get("action", "?")
+            color = {"pruned": GREEN, "rolled_back": RED}.get(act, MUTED)
+            detail = ""
+            if act == "pruned":
+                detail = (f' — pruned {", ".join(e["candidates"])}: score {e["pre_score"]}/8→{e["post_score"]}/8, '
+                          f'{e["pre_mean_tokens"]:.0f}→{e["post_mean_tokens"]:.0f} tok/query')
+            elif act == "rolled_back":
+                detail = f' — {", ".join(e["candidates"])} RESTORED ({e.get("reason", "")})'
+            lines.append(f'<div style="margin:3px 0"><span style="color:{MUTED}">{e.get("ts","")}</span> '
+                         f'<b style="color:{color}">{act.upper()}</b>{detail}</div>')
+    except FileNotFoundError:
+        lines = [f'<div style="color:{MUTED}">no audit cycles yet — the loop runs on a schedule '
+                 f'(`python autopilot.py --interval 300`) or on demand below.</div>']
+    except Exception as e:  # noqa: BLE001
+        lines = [f'<div style="color:{MUTED}">audit log unreadable ({e}).</div>']
+    st.markdown(f'<div class="rent-panel">{"".join(lines)}</div>', unsafe_allow_html=True)
+    if not replay_mode and st.button("Run audit cycle now"):
+        with st.spinner("autopilot: verify → prune → verify …"):
+            r = subprocess.run([sys.executable, "autopilot.py", "--once", "--run-id", RUN_ID],
+                               capture_output=True, text=True)
+        if r.returncode != 0:
+            st.error(f"autopilot cycle failed: {r.stderr[-400:]}")
+        st.rerun()
+
+
 # --------------------------------------------------------------------------------------------------
 # Layout
 # --------------------------------------------------------------------------------------------------
@@ -555,6 +626,7 @@ st.session_state.setdefault("pruned_ids", set())   # replay-mode fire-buttons: a
 
 st.markdown(f'<div style="color:{AMBER};font-size:1.1rem;letter-spacing:.14em">RENT — THE MEMORY P&amp;L'
             f'{"  ·  REPLAY" if REPLAY_MODE else ""}</div>', unsafe_allow_html=True)
+render_odometer(REPLAY_MODE)
 
 try:
     rows, candidate_ids, idle_ids = load_view(REPLAY_MODE, st.session_state["pruned"])
@@ -592,6 +664,7 @@ if screen == "Leaderboard":
 
     render_cost_tiles()
     render_receipts(REPLAY_MODE)
+    render_autopilot_panel(REPLAY_MODE)
     render_footer()
 
 else:  # Regression / Query

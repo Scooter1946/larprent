@@ -88,7 +88,9 @@ def run_arm(arm: str, world: dict, question: dict, run_id: str, phase: str) -> d
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--phase", choices=["pre_prune", "post_prune"], required=True)
+    ap.add_argument("--phase", choices=["pre_prune", "post_prune", "autopilot_pre", "autopilot_post"],
+                     required=True)   # autopilot_* are SCRATCH phases: check_demo never reads them and
+                                      # they write their own captures/replay_autopilot_*.json files
     ap.add_argument("--run-id", default=None)
     args = ap.parse_args()
     run_id = args.run_id or f"rent-{args.phase}-{uuid.uuid4().hex[:8]}"

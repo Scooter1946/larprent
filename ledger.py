@@ -180,6 +180,25 @@ def get_live_earned(run_id: str) -> dict[str, float]:
     return {bid: float(earned) for bid, earned in cur.fetchall()}
 
 
+def get_prune_candidates_multi(run_id: str, phases: list[str]) -> list[str]:
+    """Autopilot's candidate rule across cumulative usage (benchmark + live phases): retrieved for
+    >=2 distinct (phase, question) events, never earned a cent anywhere in this run (covers both
+    benchmark correct+supporting earnings and live scripted earnings), and categorically never a
+    supporting bundle for any fixture question. Uses retrieval_log for counts (rent_ledger has no
+    'live' retrieval rows by design)."""
+    cur = get_conn().cursor()
+    ph = ",".join(f"'{p}'" for p in phases)   # ponytail: phases are code-controlled constants, not user input
+    cur.execute(f"""SELECT r.bundle_id FROM retrieval_log r
+        WHERE r.run_id=%(run_id)s AND r.phase IN ({ph})
+        GROUP BY r.bundle_id
+        HAVING COUNT(DISTINCT r.phase || ':' || r.question_id) >= 2
+           AND NOT EXISTS (SELECT 1 FROM rent_ledger l WHERE l.bundle_id=r.bundle_id
+                             AND l.run_id=%(run_id)s AND l.earned_dollars > 0)
+           AND NOT EXISTS (SELECT 1 FROM fixture_support_map f WHERE f.bundle_id=r.bundle_id)
+        ORDER BY r.bundle_id""", {"run_id": run_id})
+    return [r[0] for r in cur.fetchall()]
+
+
 # Exact retrieval-design matrix from Fixtures spec, as data — this is the real gate, not aggregate counts.
 EXPECTED_RETRIEVAL = {
     "B01": {"Q1"}, "B02": {"Q2"}, "B03": {"Q3"}, "B04": {"Q4"},

@@ -55,3 +55,12 @@ def reset_active_all() -> None:
     conn = get_conn(); cur = conn.cursor()
     cur.execute("UPDATE bundle_registry SET active=TRUE, pruned_ts=NULL")
     conn.commit()
+
+
+def restore_bundles(bundle_ids: list[str]) -> None:
+    """Autopilot rollback: targeted restore of exactly the bundles a failed cycle pruned — never a
+    blanket reset (a blanket reset would also undo the demo's own staged prune state)."""
+    conn = get_conn(); cur = conn.cursor()
+    cur.executemany("UPDATE bundle_registry SET active=TRUE, pruned_ts=NULL WHERE bundle_id = %s",
+                    [(b,) for b in bundle_ids])
+    conn.commit()
