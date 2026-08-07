@@ -64,6 +64,14 @@ non-negotiable.
    stays as the "fire the rest" follow-up. Cost tiles logic unchanged (they still compare the frozen
    pre/post captures).
 
+7. **OPTIONAL — build ONLY if 1–6 are green with time to spare: live earnings for scripted
+   questions (~15 lines)**: when a live query matches one of the 8 eval questions (selectbox path,
+   or freeform text that equals one), grade it against its gold alternates (reuse benchmark's
+   normalize-in-set check) and, on a correct answer, also write the earnings side into the
+   phase='live' slice (same even-split-across-supporting rule). The leaderboard then shows a memory
+   EARNING live on stage — the Q&A killer when a judge asks a scripted question themselves.
+   Freeform non-eval questions stay rent-only (no gold → no earnings → that's the worldview, not a gap).
+
 ## Demo-script placement (update the two lines in plans/PLAN-rent.md's demo script if needed)
 The beat runs ~1:00–1:30: feed → "memory born" panel → freeform query answers from it → its first
 rent chip appears → "every memory starts life in the red — it has to earn its seat. These two never
