@@ -1,0 +1,407 @@
+{
+  "run_id": "show1",
+  "phase": "autopilot_pre",
+  "model": "gpt-4o-mini",
+  "events": [
+    {
+      "question_id": "Q1",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q1",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "dfe49cd99bdc2f35ba083c3e244dd855f9ac7d2d96fe433dca4e9060bccb4364",
+        "model_answer": "2026-01-15",
+        "gold_answer": "2026-01-15",
+        "is_correct": true,
+        "prompt_tokens": 1180,
+        "completion_tokens": 6,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q1",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "345c118ceebdec7397e3a464d2fbfbea02018266761f1a856f85ba49548ab348",
+        "model_answer": "2026-01-15",
+        "gold_answer": "2026-01-15",
+        "is_correct": true,
+        "prompt_tokens": 244,
+        "completion_tokens": 6,
+        "bundle_token_map": {
+          "B01": 89,
+          "B09": 94
+        },
+        "context_bundle_ids": [
+          "B01",
+          "B09"
+        ]
+      }
+    },
+    {
+      "question_id": "Q2",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q2",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "bb2a954aa221e2243eeae789cf6b2b6a05ae874f9291f9e0954757d13cdfa0ab",
+        "model_answer": "60 automation runs per minute.",
+        "gold_answer": "60",
+        "is_correct": true,
+        "prompt_tokens": 1179,
+        "completion_tokens": 6,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q2",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "41da665046653535d18ebb9a64a49cd19e081da5f9c58a87c2d6bb2b732ef6b6",
+        "model_answer": "60 automation runs per minute.",
+        "gold_answer": "60",
+        "is_correct": true,
+        "prompt_tokens": 240,
+        "completion_tokens": 6,
+        "bundle_token_map": {
+          "B02": 87,
+          "B09": 94
+        },
+        "context_bundle_ids": [
+          "B02",
+          "B09"
+        ]
+      }
+    },
+    {
+      "question_id": "Q3",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q3",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "b468ae2dcb25303c915311437488ed89ea3018a77874be6677534ae0851fba7d",
+        "model_answer": "$79 per month",
+        "gold_answer": "$79",
+        "is_correct": true,
+        "prompt_tokens": 1186,
+        "completion_tokens": 4,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q3",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "1eeff10ad877e7e2d3e3be7b4a3251059d23049f9238730d03b2985d25a282b7",
+        "model_answer": "$79 per month",
+        "gold_answer": "$79",
+        "is_correct": true,
+        "prompt_tokens": 266,
+        "completion_tokens": 4,
+        "bundle_token_map": {
+          "B03": 95,
+          "B10": 105
+        },
+        "context_bundle_ids": [
+          "B03",
+          "B10"
+        ]
+      }
+    },
+    {
+      "question_id": "Q4",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q4",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0fbc13c22fada19953485b05ea487a1e42abd5e73dcbde5956336dfc763e6c48",
+        "model_answer": "$199 per month.",
+        "gold_answer": "$199",
+        "is_correct": true,
+        "prompt_tokens": 1182,
+        "completion_tokens": 5,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q4",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "c843f0e846f09bbac01c31d250e1880ff0c37a1dade9ad9ecbf5504494b7c8cc",
+        "model_answer": "$199 per month.",
+        "gold_answer": "$199",
+        "is_correct": true,
+        "prompt_tokens": 252,
+        "completion_tokens": 5,
+        "bundle_token_map": {
+          "B04": 86,
+          "B10": 105
+        },
+        "context_bundle_ids": [
+          "B04",
+          "B10"
+        ]
+      }
+    },
+    {
+      "question_id": "Q5",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q5",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "45c8f4e621ec25d79eede358d81e306d786eef62a5af14a7cfc333cda0f0c860",
+        "model_answer": "99.95% uptime.",
+        "gold_answer": "99.95%",
+        "is_correct": true,
+        "prompt_tokens": 1181,
+        "completion_tokens": 6,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q5",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "53d5345683212b3d9cc45eb61e123d055a5744a534ca5a02cae288b5f843077e",
+        "model_answer": "99.95%",
+        "gold_answer": "99.95%",
+        "is_correct": true,
+        "prompt_tokens": 154,
+        "completion_tokens": 4,
+        "bundle_token_map": {
+          "B05": 98
+        },
+        "context_bundle_ids": [
+          "B05"
+        ]
+      }
+    },
+    {
+      "question_id": "Q6",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q6",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "fa4b88ec7ce6167b948d401ac11874a50d36bdf57742d131e94c4408c5c9fb93",
+        "model_answer": "EU region.",
+        "gold_answer": "EU",
+        "is_correct": true,
+        "prompt_tokens": 1182,
+        "completion_tokens": 3,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q6",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "70c2341ad12cdf7d630d0ed024a8fc4bbc96980937a8ea8cb7b4f2a636dd88d7",
+        "model_answer": "EU region.",
+        "gold_answer": "EU",
+        "is_correct": true,
+        "prompt_tokens": 153,
+        "completion_tokens": 3,
+        "bundle_token_map": {
+          "B06": 92
+        },
+        "context_bundle_ids": [
+          "B06"
+        ]
+      }
+    },
+    {
+      "question_id": "Q7",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q7",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "67a8c5b09ab07c77ffbe9560102c2d65c79d7137f1142b666b6ef3662d93830b",
+        "model_answer": "47 minutes",
+        "gold_answer": "47 minutes",
+        "is_correct": true,
+        "prompt_tokens": 1182,
+        "completion_tokens": 2,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q7",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "d18b26e9a1b03a3eb33b46344cc463c1b13624a464e856ebfc6749582635110e",
+        "model_answer": "47 minutes",
+        "gold_answer": "47 minutes",
+        "is_correct": true,
+        "prompt_tokens": 171,
+        "completion_tokens": 2,
+        "bundle_token_map": {
+          "B07": 109
+        },
+        "context_bundle_ids": [
+          "B07"
+        ]
+      }
+    },
+    {
+      "question_id": "Q8",
+      "naive": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "naive",
+        "question_id": "Q8",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "e7b1596d8af1144fffffa738bfb2d1ed9e94cf362d9457641d50e5df31229681",
+        "model_answer": "312 customers.",
+        "gold_answer": "312",
+        "is_correct": true,
+        "prompt_tokens": 1186,
+        "completion_tokens": 3,
+        "context_bundle_ids": [
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12"
+        ]
+      },
+      "memory": {
+        "run_id": "show1",
+        "phase": "autopilot_pre",
+        "arm": "memory",
+        "question_id": "Q8",
+        "model": "gpt-4o-mini",
+        "prompt_hash": "3adba9ce18100bd84fc0eb8fe2b63a9f5db060d602e37df7ee7f71bc74b86c20",
+        "model_answer": "312 customers.",
+        "gold_answer": "312",
+        "is_correct": true,
+        "prompt_tokens": 167,
+        "completion_tokens": 3,
+        "bundle_token_map": {
+          "B08": 101
+        },
+        "context_bundle_ids": [
+          "B08"
+        ]
+      }
+    }
+  ]
+}

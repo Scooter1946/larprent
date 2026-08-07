@@ -1,1 +1,2 @@
 {"cycle": 1, "action": "clean", "candidates": [], "ts": "2026-08-07T14:39:28"}
+{"cycle": 1, "action": "pruned", "candidates": ["B09", "B10"], "pre_score": 8, "post_score": 8, "pre_mean_tokens": 205.9, "post_mean_tokens": 156.1, "ts": "2026-08-07T15:04:46"}
