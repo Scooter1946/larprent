@@ -106,7 +106,9 @@
       "gold_answer": [
         "60",
         "60 runs per minute",
-        "60 per minute"
+        "60 per minute",
+        "60 automation runs per minute",
+        "60 automation runs"
       ],
       "supporting_bundle_ids": [
         "B02"
@@ -141,7 +143,10 @@
       "query": "What uptime SLA percentage did Acme commit to for Northwind Traders?",
       "gold_answer": [
         "99.95%",
-        "99.95"
+        "99.95",
+        "99.95 percent",
+        "99.95% uptime",
+        "99.95 uptime"
       ],
       "supporting_bundle_ids": [
         "B05"
@@ -165,7 +170,8 @@
       "query": "How long did the 2025-11-02 search outage last?",
       "gold_answer": [
         "47 minutes",
-        "47"
+        "47",
+        "47 min"
       ],
       "supporting_bundle_ids": [
         "B07"
