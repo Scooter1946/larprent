@@ -28,13 +28,26 @@ def _run_benchmark(phase: str, run_id: str) -> None:
     subprocess.run([sys.executable, "benchmark.py", "--phase", phase, "--run-id", run_id], check=True)
 
 
+def _assert_capture_quality(phase: str) -> None:
+    """Quality gate: both arms must be 8/8 in captures/replay_<phase>.json before we trust it enough
+    to prune against or freeze into a capture. Aborts loudly rather than let a bad capture get frozen."""
+    events = json.load(open(f"captures/replay_{phase}.json"))["events"]
+    for arm in ("naive", "memory"):
+        n = sum(e[arm]["is_correct"] for e in events)
+        if n != 8:
+            raise SystemExit(f"{phase}: {arm} arm {n}/8 — fix fixtures/prompt/calibration BEFORE "
+                             f"pruning; aborting so no bad capture is frozen")
+
+
 def capture_sequence(run_id: str) -> None:
     _run_benchmark("pre_prune", run_id)                                   # 1
+    _assert_capture_quality("pre_prune")
     candidates = ledger.get_prune_candidates(run_id, "pre_prune")         # 2
     json.dump(candidates, open("captures/prune_candidates.json", "w"))
     print(f"prune candidates (frozen): {candidates}")
     bundles.apply_prune(candidates)                                       # 3
     _run_benchmark("post_prune", run_id)                                  # 4
+    _assert_capture_quality("post_prune")
     benchmark.save_receipts_snapshot(run_id)                             # 5
     print(f"reset_prune: capture sequence complete for run_id={run_id}. "
           f"Now run `python seed.py --restore-active` to stage the live PRUNE transition.")
@@ -48,7 +61,7 @@ def main():
     args = ap.parse_args()
     if args.restore:
         bundles.reset_active_all()   # rehearsal full redo: clear any leftover pruned state first
-        capture_sequence("show1")
+        capture_sequence(args.run_id)
     else:
         capture_sequence(args.run_id)
 

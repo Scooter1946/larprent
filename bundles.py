@@ -6,10 +6,16 @@ inactive; a dropped seat stays EMPTY. Ranks beyond the freeze point are never co
 downstream can ever fill a pruned seat (the deterministic check in Task 4 Part B proves rank 7 never
 enters a top-6 window after the rank-1 bundle is pruned).
 """
+import os
+
 import mem
 from snow import get_conn
 
 TOP_K_DEFAULT, OVERFETCH_PAD = 6, 4   # pad only absorbs duplicate episodes of the SAME session; never a backfill source
+# Day-of calibration knob — tune via ledger.get_calibration_report() until the retrieval matrix
+# matches EXPECTED_RETRIEVAL exactly; set via env RENT_MIN_SCORE, no code edit needed. If the score
+# scale makes a fixed threshold awkward, lowering TOP_K_DEFAULT is the fallback.
+MIN_SCORE = float(os.environ.get("RENT_MIN_SCORE", "0.35"))
 
 
 def get_session_to_bundle_map() -> dict[str, dict]:
@@ -20,7 +26,9 @@ def get_session_to_bundle_map() -> dict[str, dict]:
 
 
 def recall_bundles(query: str, user_id: str, top_k: int = TOP_K_DEFAULT) -> list[dict]:
-    hits = mem.recall(query, user_id=user_id, top_k=top_k + OVERFETCH_PAD)   # list[dict], already normalized by mem.py's adapter
+    # IMPORTANT: with only 12 bundles and no gate, every question seats top_k bundles and the
+    # calibration matrix/idle-column/candidate-set all break — the gate is what makes retrieval sparse.
+    hits = mem.recall(query, user_id=user_id, top_k=top_k + OVERFETCH_PAD, min_score=MIN_SCORE)   # list[dict], already normalized by mem.py's adapter
     reg = get_session_to_bundle_map()
     seen, frozen_seats = set(), []
     for rank, ep in enumerate(hits, start=1):

@@ -5,7 +5,9 @@ one EverOS session under user_id="acme:support"; a Snowflake bundle_registry row
 session_id <-> bundle_id and holds the only mutable state (active).
 
   python seed.py                 full seed (MERGE registry rows, seed support map, all active)
-  python seed.py --reset         clear the 4 result/log tables (NOT bundle_registry) then re-seed
+  python seed.py --reset         clear the 3 result/log tables (llm_call_log is intentionally
+                                  retained — it is the cost-telemetry record) (NOT bundle_registry)
+                                  then re-seed
   python seed.py --restore-active flip bundle_registry.active back to TRUE for all 12 — nothing else
 """
 from dotenv import load_dotenv; load_dotenv()

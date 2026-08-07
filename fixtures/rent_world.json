@@ -28,13 +28,13 @@
      "content": "The parking garage next to the office building will have its top two levels repaved starting next Monday. Employees who normally park on levels three and four should use the overflow lot two blocks north for the week. Building management sent a reminder email with a map of the overflow lot and its access hours. The repaving is expected to finish by the following Friday, weather permitting."}
   ],
   "questions": [
-    {"question_id": "Q1", "query": "What date did Acme's Kanban Board v3 launch?", "gold_answer": "2026-01-15", "supporting_bundle_ids": ["B01"]},
-    {"question_id": "Q2", "query": "How many automation runs per minute does the Team plan allow?", "gold_answer": "60", "supporting_bundle_ids": ["B02"]},
-    {"question_id": "Q3", "query": "What is the monthly price of Acme's Team plan after the 2026 pricing overhaul?", "gold_answer": "$79", "supporting_bundle_ids": ["B03"]},
-    {"question_id": "Q4", "query": "How much does Acme's Enterprise SSO add-on cost per month?", "gold_answer": "$199", "supporting_bundle_ids": ["B04"]},
-    {"question_id": "Q5", "query": "What uptime SLA percentage did Acme commit to for Northwind Traders?", "gold_answer": "99.95%", "supporting_bundle_ids": ["B05"]},
-    {"question_id": "Q6", "query": "Which data residency region is contractually required for Globex Corp's account?", "gold_answer": "EU", "supporting_bundle_ids": ["B06"]},
-    {"question_id": "Q7", "query": "How long did the 2025-11-02 search outage last?", "gold_answer": "47 minutes", "supporting_bundle_ids": ["B07"]},
-    {"question_id": "Q8", "query": "How many customers were affected by the 2026-02-14 billing double-charge incident?", "gold_answer": "312", "supporting_bundle_ids": ["B08"]}
+    {"question_id": "Q1", "query": "What date did Acme's Kanban Board v3 launch?", "gold_answer": ["2026-01-15", "January 15, 2026", "January 15 2026"], "supporting_bundle_ids": ["B01"]},
+    {"question_id": "Q2", "query": "How many automation runs per minute does the Team plan allow?", "gold_answer": ["60", "60 runs per minute", "60 per minute"], "supporting_bundle_ids": ["B02"]},
+    {"question_id": "Q3", "query": "What is the monthly price of Acme's Team plan after the 2026 pricing overhaul?", "gold_answer": ["$79", "$79 per month", "$79/month"], "supporting_bundle_ids": ["B03"]},
+    {"question_id": "Q4", "query": "How much does Acme's Enterprise SSO add-on cost per month?", "gold_answer": ["$199", "$199 per month", "$199/month"], "supporting_bundle_ids": ["B04"]},
+    {"question_id": "Q5", "query": "What uptime SLA percentage did Acme commit to for Northwind Traders?", "gold_answer": ["99.95%", "99.95"], "supporting_bundle_ids": ["B05"]},
+    {"question_id": "Q6", "query": "Which data residency region is contractually required for Globex Corp's account?", "gold_answer": ["EU", "the EU", "EU region", "the EU region"], "supporting_bundle_ids": ["B06"]},
+    {"question_id": "Q7", "query": "How long did the 2025-11-02 search outage last?", "gold_answer": ["47 minutes", "47"], "supporting_bundle_ids": ["B07"]},
+    {"question_id": "Q8", "query": "How many customers were affected by the 2026-02-14 billing double-charge incident?", "gold_answer": ["312", "312 customers"], "supporting_bundle_ids": ["B08"]}
   ]
 }

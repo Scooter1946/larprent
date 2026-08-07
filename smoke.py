@@ -27,8 +27,6 @@ def check_model() -> None:
     except Exception as e:  # noqa: BLE001 — smoke gate: surface remediation, then re-raise
         msg = str(e)
         print(f"  FAIL: ai_complete raised: {msg}")
-        if "VERSION_NOT_ALLOWED" in msg or "403" in msg:
-            print("  -> EverOS/Cortex key needs v2 enablement. Fix the key before continuing.")
         print("  -> If claude-haiku-4-5 is unavailable/region-locked, run in Snowsight:")
         print("       ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';")
         print("     then re-run. If still unavailable, set MODEL = 'openai-gpt-5-mini' in benchmark.py.")
@@ -43,15 +41,21 @@ def check_model() -> None:
 
 def check_memory() -> None:
     print("[2/2] EverOS remember -> recall round trip ...")
-    mem.remember(
-        session_id=SMOKE_SESSION,
-        messages=[{"sender_id": SMOKE_USER, "role": "user",
-                   "content": "Smoke fact: the launch code for the demo is teal-otter-1946."}],
-    )
-    hits = mem.recall("what is the demo launch code", user_id=SMOKE_USER, top_k=10)
-    print(f"  recalled {len(hits)} episode(s); first={hits[0] if hits else None}")
-    assert hits, "recall returned an empty list right after remember+flush — EverOS write may have no-oped"
-    print("  OK: non-empty recall.")
+    try:
+        mem.remember(
+            session_id=SMOKE_SESSION,
+            messages=[{"sender_id": SMOKE_USER, "role": "user",
+                       "content": "Smoke fact: the launch code for the demo is teal-otter-1946."}],
+        )
+        hits = mem.recall("what is the demo launch code", user_id=SMOKE_USER, top_k=10)
+        print(f"  recalled {len(hits)} episode(s); first={hits[0] if hits else None}")
+        assert hits, "recall returned an empty list right after remember+flush — EverOS write may have no-oped"
+        print("  OK: non-empty recall.")
+    except Exception as e:  # noqa: BLE001 — smoke gate: surface remediation, then re-raise
+        msg = str(e)
+        if "VERSION_NOT_ALLOWED" in msg or "403" in msg:
+            print("  -> EverOS key is v1-only — regenerate a v2 key at everos.evermind.ai console → API keys")
+        raise
 
 
 def main() -> int:

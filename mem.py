@@ -58,9 +58,14 @@ def remember(session_id: str, messages: list[dict]) -> None:
     client.flush(session_id)
 
 
-def recall(query: str, user_id: str, top_k: int = 10) -> list[dict]:
-    """Hybrid search scoped to a user; returns normalized dicts (NOT the raw SearchData)."""
-    result = _get_client().search(query, user_id=user_id, top_k=top_k, method="hybrid")
+def recall(query: str, user_id: str, top_k: int = 10, min_score: float | None = None) -> list[dict]:
+    """Hybrid search scoped to a user; returns normalized dicts (NOT the raw SearchData). `min_score`,
+    when not None, is a calibration gate passed through to search() (EverOS v2 search supports
+    min_score)."""
+    kwargs = {"top_k": top_k, "method": "hybrid"}
+    if min_score is not None:
+        kwargs["min_score"] = min_score
+    result = _get_client().search(query, user_id=user_id, **kwargs)
     return [_normalize_episode(ep) for ep in result.episodes]
 
 

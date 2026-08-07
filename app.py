@@ -317,7 +317,8 @@ def run_query(question: dict, replay_mode: bool, run_id: str) -> None:
     else:
         prompt, hits, _ = build_memory_prompt(load_world(), question)   # reflects the PRUNED registry
         text, usage = ai_complete(MODEL, prompt, purpose="rent_eval_live", run_id=run_id,
-                                  user_id=USER_ID, agent_tag="rent:memory:live", model_parameters=GEN_PARAMS)
+                                  user_id=USER_ID, agent_tag="rent:memory:live", model_parameters=GEN_PARAMS,
+                                  extra={"question_id": question["question_id"]})
         st.markdown(f'<div class="rent-panel"><b style="color:{GREEN}">LIVE</b> — {question["query"]}'
                     f'<br>&rarr; <b>{text.strip()}</b><br>'
                     f'<span style="color:{MUTED}">context: {[h["bundle_id"] for h in hits]}, '
