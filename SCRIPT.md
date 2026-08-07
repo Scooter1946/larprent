@@ -1,4 +1,37 @@
-# Presentation script — slides + live demo (3:00 total)
+# Presentation script
+
+## ⚡ CURRENT FORMAT: 1 minute, slides only (rules changed day-of)
+
+Judges look only at the deck. The deck reads standalone; if you get to speak, this is the 60-second
+track over the 5 slides (~140 words — slow is fine, the slides carry the content):
+
+**Slide 1 (What it is) — 0:00**
+> "We built Rent. It tracks what an AI assistant's memories cost — and whether they're worth it."
+
+**Slide 2 (How it works) — 0:10**
+> "Every memory included in a prompt is charged rent: the tokens it takes up. When a memory is the
+> reason an answer came out right, it's credited what it saved. Both sides are measured."
+
+**Slide 3 (The ledger) — 0:25**
+> "That gives every memory a balance. Eight of ours earned. Two kept being included and never
+> helped. Two were never used at all."
+
+**Slide 4 (Remove + result) — 0:38**
+> "We removed the two that never helped. Same eight-question test before and after: identical
+> scores, twenty-four percent cheaper — and the savings show up exactly on the questions those
+> memories had been included in."
+
+**Slide 5 (Runs itself) — 0:52**
+> "An autopilot runs this loop on a schedule, and rolls back automatically if accuracy drops.
+> That's Rent — thanks."
+
+Fallbacks: none needed — the deck is offline, self-contained, keyboard-driven (Space/arrows).
+If judges browse it without you, it reads standalone by design. The live app remains available at
+the repo (replay mode, zero keys) as the "see it running" link.
+
+---
+
+# ARCHIVE — previous format: slides + live demo (3:00 total)
 
 Spoken words: ~410. Rehearse at a conversational pace; you should finish with ~10s spare.
 Plain language throughout — say the sentences as written, no ad-libbed jokes.

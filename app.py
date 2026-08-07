@@ -237,8 +237,11 @@ def render_table(rows: list[dict]) -> None:
     st.markdown(
         '<table class="rent"><tr>'
         '<th>#</th><th class="l">Bundle</th><th class="l">Title</th><th class="l">Category</th>'
-        '<th>Earned</th><th>Rent</th><th>Net</th><th>Seen</th><th>Status</th></tr>'
+        '<th>Earned</th><th>Rent</th><th>Net</th><th>Included</th><th>Status</th></tr>'
         + "".join(trs) + "</table>", unsafe_allow_html=True)
+    st.markdown(f'<div class="rent-foot" style="margin-top:6px">Rent = cost of being included in '
+                f'prompts &middot; Earned = tokens saved when it made an answer correct &middot; '
+                f'Net = earned &minus; rent</div>', unsafe_allow_html=True)
 
 
 def _set_cost_tiles() -> None:
@@ -252,6 +255,16 @@ def _set_cost_tiles() -> None:
         st.info(f"cost tiles need {PRE_CAPTURE} / {POST_CAPTURE} ({e}).")
 
 
+def _removed_sentence(bundle_ids: list[str]) -> str:
+    """Plain after-action sentence for FIRE/PRUNE — stashed in session_state (st.rerun() fires
+    immediately after, same persistence pattern as fed_memory_html) so it survives the rerun."""
+    ids = ", ".join(f"[{b}]" for b in bundle_ids)
+    pronoun = "They" if len(bundle_ids) > 1 else "It"
+    return (f'<div class="rent-panel" style="border:1px solid {RED};margin-top:6px">'
+            f'<b style="color:{RED}">{ids} removed.</b> {pronoun} will no longer be included in any '
+            f'prompt.</div>')
+
+
 def _fire_bundle(bid: str, replay_mode: bool) -> None:
     """Prune exactly ONE candidate (audience picks the victim). Both candidates are support-map-guarded
     decoys, so any choice is safe. Live: real single-bundle SQL. Replay: local pruned_ids set."""
@@ -259,6 +272,7 @@ def _fire_bundle(bid: str, replay_mode: bool) -> None:
         st.session_state["pruned_ids"].add(bid)   # unioned into compute_local_ledger's pruned_ids
     else:
         bundles.apply_prune([bid])                # REAL SQL, single bundle, zero LLM calls
+    st.session_state["removed_notice_html"] = _removed_sentence([bid])
     _set_cost_tiles()
     st.rerun()
 
@@ -282,7 +296,9 @@ def render_red_panel(rows: list[dict], candidate_ids: list[str], replay_mode: bo
                 f'<div class="rent-panel rent-red" style="margin:4px 0"><b style="color:{RED}">{bid}</b> '
                 f'{r.get("title","")} — retrieved {r.get("times_retrieved",0)} times, paid '
                 f'<b style="color:{AMBER}">{money(r.get("total_rent",0.0))}</b> in rent, earned '
-                f'<b>$0.0000</b> — never supported a correct answer.</div>', unsafe_allow_html=True)
+                f'<b>$0.0000</b> — never supported a correct answer.'
+                f'<div class="rent-foot" style="margin-top:4px">removal is a reversible flag — the '
+                f'memory is not deleted, it just stops being included</div></div>', unsafe_allow_html=True)
         with c2:
             if fired:
                 st.markdown('<div class="badge badge-pruned" style="text-align:center;margin-top:16px">'
@@ -379,6 +395,29 @@ def render_cost_tiles() -> None:
 # Task 9 — regression replay + one live/replayed query (ALWAYS render from a captured file at click
 # time in EITHER mode — satisfies the binding two-live-call cap for the regression suite)
 # --------------------------------------------------------------------------------------------------
+def render_proof_summary_strip() -> None:
+    """The ONE main thing on screen 4, first: a compact before/after strip computed from the frozen
+    capture files (never hardcoded) — score and mean tokens/query, pre-prune vs. post-prune."""
+    try:
+        pre = json.load(open(PRE_CAPTURE))["events"]
+        post = json.load(open(POST_CAPTURE))["events"]
+        pre_correct = sum(1 for e in pre if e["memory"]["is_correct"])
+        post_correct = sum(1 for e in post if e["memory"]["is_correct"])
+        pre_tokens = sum(e["memory"]["prompt_tokens"] for e in pre) / len(pre)
+        post_tokens = sum(e["memory"]["prompt_tokens"] for e in post) / len(post)
+        pct = (post_tokens - pre_tokens) / pre_tokens * 100 if pre_tokens else 0.0
+        st.markdown(f"""<div class="rent-panel" style="border:1px solid {GREEN}">
+          <div class="rent-tile-label">Measured, recorded run</div>
+          <div style="font-size:1.35rem;font-weight:700;margin-top:4px;color:{TEXT}">
+            {pre_correct}/{len(pre)} before &middot; {post_correct}/{len(post)} after &middot;
+            {pre_tokens:.1f} &rarr; {post_tokens:.1f} tokens/query &middot;
+            <span style="color:{GREEN}">{pct:+.1f}%</span>
+          </div>
+        </div>""", unsafe_allow_html=True)
+    except Exception as e:  # noqa: BLE001 — captures may not exist yet in skeleton stage
+        st.info(f"summary strip needs {PRE_CAPTURE} / {POST_CAPTURE} ({e}).")
+
+
 def animate_regression_suite(pruned: bool) -> None:
     path = POST_CAPTURE if pruned else PRE_CAPTURE
     st.caption("measured pre-show run (replayed) — zero live calls right now")
@@ -451,6 +490,14 @@ def _live_prompt(query: str):
     return prompt, hits, bundle_tokens
 
 
+def _used_memories_sentence(bundle_ids: list[str]) -> str:
+    """Plain after-action sentence rendered under every answered query (replay or live) — reuses the
+    real bundle ids that were actually retrieved and rent-charged for this answer."""
+    ids = ", ".join(f"[{b}]" for b in bundle_ids)
+    return (f'<div class="rent-foot" style="margin-top:4px">This answer used {ids}. Each memory '
+            f'listed was charged rent for being included.</div>')
+
+
 def run_query(question: dict, replay_mode: bool, run_id: str) -> None:
     qid = question.get("question_id", "freeform")
     if replay_mode:
@@ -465,6 +512,7 @@ def run_query(question: dict, replay_mode: bool, run_id: str) -> None:
                     f'<br>&rarr; <b>{r["model_answer"]}</b><br>'
                     f'<span style="color:{MUTED}">context: {r["context_bundle_ids"]}, '
                     f'{r["prompt_tokens"]} prompt tokens</span></div>', unsafe_allow_html=True)
+        st.markdown(_used_memories_sentence(r["context_bundle_ids"]), unsafe_allow_html=True)
         return
     prompt, hits, bundle_tokens = _live_prompt(question["query"])   # fixture text for fixture bundles, EverOS text for live-fed
     if not hits:   # nothing cleared the min_score gate — the honest miss (the gate working IS the feature)
@@ -507,6 +555,7 @@ def run_query(question: dict, replay_mode: bool, run_id: str) -> None:
                 f'<span style="color:{MUTED}">context: {[h["bundle_id"] for h in hits]}, '
                 f'{usage["prompt_tokens"]} prompt tokens — {earned_note}</span></div>',
                 unsafe_allow_html=True)
+    st.markdown(_used_memories_sentence([h["bundle_id"] for h in hits]), unsafe_allow_html=True)
 
 
 def _show_prefed_fallback() -> None:
@@ -563,9 +612,9 @@ def feed_memory(text: str) -> None:
         f'<div class="rent-tile-label" style="color:{GREEN}">Memory born — {bundle_id} '
         f'(ACTIVE, in the red)</div>'
         f'<div style="margin-top:6px">{born["content"]}</div>'
-        f'<div class="rent-foot" style="margin-top:6px">EverOS extracted this from what you '
-        f'typed. Every memory starts life ACTIVE and in the red — it has to earn its seat. '
-        f'Query it to watch its first rent charge land on the leaderboard.</div>'
+        f'<div class="rent-foot" style="margin-top:6px">Stored as {bundle_id}. It has earned $0 so '
+        f'far — it gets charged rent every time it is included in a prompt. Query it below to watch '
+        f'that happen.</div>'
         f'</div>')
 
 
@@ -623,7 +672,12 @@ def render_autopilot_panel(replay_mode: bool) -> None:
     except Exception as e:  # noqa: BLE001
         lines = [f'<div style="color:{MUTED}">audit log unreadable ({e}).</div>']
     st.markdown(f'<div class="rent-panel">{"".join(lines)}</div>', unsafe_allow_html=True)
-    if not replay_mode and st.button("Run audit cycle now"):
+    if replay_mode:
+        # Live-only control — still rendered (disabled) so it's discoverable, not silently missing.
+        st.button("Run audit cycle now", disabled=True, key="audit_cycle_disabled")
+        st.caption("Running a live audit cycle requires live mode — untick 'Replay mode' in the "
+                   "sidebar.")
+    elif st.button("Run audit cycle now"):
         with st.spinner("autopilot: verify → prune → verify …"):
             r = subprocess.run([sys.executable, "autopilot.py", "--once", "--run-id", RUN_ID],
                                capture_output=True, text=True)
@@ -651,9 +705,10 @@ PRESENTER_CUES = {
 
 
 def render_presenter_cue(screen_name: str) -> None:
+    """Presenter-only rehearsal cue (time window + opening line) — lives in the SIDEBAR, not the
+    canvas, so the main screen stays audience-facing only. Updates with the sidebar screen radio."""
     window, line = PRESENTER_CUES[screen_name]
-    st.markdown(f'<div class="rent-foot" style="margin:2px 0 10px">{window} — &ldquo;{line}&rdquo;</div>',
-                unsafe_allow_html=True)
+    st.sidebar.caption(f'{window} — "{line}"')
 
 
 # Self-explanatory text (plain language, no presenter needed) — one always-visible sentence per
@@ -695,10 +750,45 @@ SCREEN_EXPLAINERS = {
                       "had dropped, the removal would have been rolled back and logged.",
 }
 
+# Step-header content — audience-facing, plain-language titles (distinct from the terse sidebar
+# labels in SCREENS) + a one/two-sentence subtitle trimmed from SCREEN_EXPLAINERS above.
+SCREEN_TITLES = {
+    "1 · The P&L": "What each memory costs — and what it's worth",
+    "2 · Hire": "Add a memory, watch it get charged",
+    "3 · Fire": "Remove the memories that never help",
+    "4 · Proof": "Same test, before and after — did answers get worse?",
+    "5 · Autopilot": "The loop that runs by itself",
+}
 
-def render_explainer(screen_name: str) -> None:
-    st.markdown(f'<div class="rent-panel" style="font-size:0.95rem">{SCREEN_EXPLAINERS[screen_name]}</div>',
-                unsafe_allow_html=True)
+def _first_sentences(text: str, n: int = 1) -> str:
+    """Plain-text trim of a SCREEN_EXPLAINERS entry to its first N sentences — strips the markdown
+    bold markers (the subtitle renders inside a raw HTML block, not through st.markdown's parser)."""
+    parts = text.replace("**", "").split(". ")
+    return ". ".join(parts[:n]).rstrip(".") + "."
+
+
+SCREEN_SUBTITLES = {name: _first_sentences(text, 2 if name == "2 · Hire" else 1)
+                    for name, text in SCREEN_EXPLAINERS.items()}
+
+
+def render_step_header(screen_name: str) -> None:
+    """Audience-facing block at the top of every screen: STEP N OF 5 eyebrow, a large plain-language
+    title, and a one/two-sentence subtitle — normal contrast, not muted, so a glance answers "what am
+    I looking at" in under 2 seconds. Replaces the old explainer-panel placement."""
+    step_n = SCREENS.index(screen_name) + 1
+    st.markdown(f"""<div style="margin:6px 0 20px">
+      <div style="color:{MUTED};font-size:0.78rem;letter-spacing:.14em;text-transform:uppercase">
+        STEP {step_n} OF {len(SCREENS)}</div>
+      <div style="color:{TEXT};font-size:1.6rem;font-weight:700;line-height:1.3;margin-top:2px">
+        {SCREEN_TITLES[screen_name]}</div>
+      <div style="color:{TEXT};font-size:0.95rem;margin-top:6px;opacity:.82">
+        {SCREEN_SUBTITLES[screen_name]}</div>
+    </div>""", unsafe_allow_html=True)
+
+
+def render_about_expander() -> None:
+    """The 'About this project' expander — kept, but relocated to the BOTTOM of every screen, just
+    above the footer, so the canvas leads with the one important thing instead of a stack of panels."""
     with st.expander("About this project — what Rent does"):
         st.markdown(ABOUT_PROJECT)
 
@@ -718,19 +808,20 @@ REPLAY_MODE = st.sidebar.checkbox("Replay mode (zero external calls)",
                                   value=os.environ.get("RENT_REPLAY_MODE") == "1")
 st.sidebar.caption(_sidebar_run_info())
 screen = st.sidebar.radio("Screen", SCREENS)
+render_presenter_cue(screen)   # presenter-only time-window/quote — sidebar only, updates with the pick
 st.sidebar.caption("Run the demo top to bottom: 1 → 2 → 3 → 4 → 5. Each screen needs at most a "
-                   "click or two — read the muted cue line, click the button(s) below it, then "
-                   "come back here for the next screen.")
+                   "click or two — the cue above is the presenter line for whichever screen is "
+                   "selected.")
 st.session_state.setdefault("pruned", False)
 st.session_state.setdefault("pruned_ids", set())   # replay-mode fire-buttons: audience-picked victims
 
 # Global elements, every screen: title strip + REPLAY badge, then the savings odometer, then the
-# presenter cue for whichever screen is selected. render_footer() closes every screen at the bottom.
+# audience-facing step header for whichever screen is selected. render_footer() closes every screen
+# at the bottom, with the About expander directly above it.
 st.markdown(f'<div style="color:{AMBER};font-size:1.1rem;letter-spacing:.14em">RENT — THE MEMORY P&amp;L'
             f'{"  ·  REPLAY" if REPLAY_MODE else ""}</div>', unsafe_allow_html=True)
 render_odometer(REPLAY_MODE)
-render_presenter_cue(screen)
-render_explainer(screen)
+render_step_header(screen)
 
 try:
     rows, candidate_ids, idle_ids = load_view(REPLAY_MODE, st.session_state["pruned"])
@@ -747,11 +838,16 @@ if screen == "1 · The P&L":
         render_idle_panel(rows, idle_ids)
 
 elif screen == "2 · Hire":
-    # 1:00–1:30 — watch a memory get born and pay its first rent.
+    # 1:00–1:30 — watch a memory get born and pay its first rent. Feed box leads the screen.
     st.markdown('<div class="rent-tile-label">Feed the agent a fact</div>', unsafe_allow_html=True)
     if REPLAY_MODE:
-        # Feed box is LIVE-only; replay shows the pre-fed fallback panel in its place — same panel
-        # the live path falls back to on an extraction timeout, so the beat never looks broken.
+        # Feed box is LIVE-only — but the control still RENDERS (disabled), so it's discoverable
+        # rather than silently missing; the pre-fed fallback panel shows what an earlier feed looked
+        # like (same panel the live path falls back to on an extraction timeout).
+        st.text_input("Feed the agent a fact", key="feed_text_disabled", disabled=True,
+                      value="Initech signed 2026-08-01; we promised them a 99.99% uptime SLA")
+        st.caption("Feeding requires live mode — untick 'Replay mode' in the sidebar. Below is a "
+                   "memory that was fed earlier.")
         _show_prefed_fallback()
     else:
         # Pre-filled with the scripted fact — click-through demo needs no typing, but stays editable
@@ -766,8 +862,10 @@ elif screen == "2 · Hire":
     st.markdown("---")
     st.markdown('<div class="rent-tile-label">Query it back — freeform (live)</div>', unsafe_allow_html=True)
     if REPLAY_MODE:
-        st.markdown('<div class="rent-foot">freeform queries are live-only — flip Replay mode off on '
-                    'the sidebar to try one.</div>', unsafe_allow_html=True)
+        st.text_input("Ask anything", key="freeform_q_disabled", disabled=True,
+                      value="What uptime did we promise Initech?")
+        st.caption("Freeform queries require live mode — untick 'Replay mode' in the sidebar to try "
+                   "one.")
     else:
         # Pre-filled to match the scripted fact above — click "Run query" with no typing needed.
         free = st.text_input("Ask anything", key="freeform_q",
@@ -776,23 +874,30 @@ elif screen == "2 · Hire":
             run_query({"query": free.strip(), "question_id": "freeform"}, REPLAY_MODE, RUN_ID)
 
 elif screen == "3 · Fire":
-    # 1:30–1:45 — audience picks the victim; before/after cost tiles.
+    # 1:30–1:45 — audience picks the victim; red panel with FIRE buttons leads the screen.
     if rows is not None:
         render_red_panel(rows, candidate_ids, REPLAY_MODE)
+    if st.session_state.get("removed_notice_html"):   # plain after-action sentence, FIRE or PRUNE
+        st.markdown(st.session_state["removed_notice_html"], unsafe_allow_html=True)
     st.markdown("---")
     if st.button("PRUNE", type="primary"):
+        candidates = json.load(open(PRUNE_CANDIDATES_PATH))   # frozen in Task 7
         if REPLAY_MODE:
             st.session_state["pruned"] = True   # LOCAL state flip only — zero Snowflake calls
         else:
-            candidates = json.load(open(PRUNE_CANDIDATES_PATH))   # frozen in Task 7
             bundles.apply_prune(candidates)                       # REAL SQL, live, zero LLM calls
             st.session_state["pruned"] = True
+        st.session_state["removed_notice_html"] = _removed_sentence(candidates)
         _set_cost_tiles()
         st.rerun()
     render_cost_tiles()
 
 elif screen == "4 · Proof":
-    # 1:45–2:50 — identical score, lower cost, receipts corroborate.
+    # 1:45–2:50 — identical score, lower cost, receipts corroborate. The compact summary strip
+    # (measured, recorded run) leads the screen; the detailed suite, live query, and receipts follow.
+    render_proof_summary_strip()
+
+    st.markdown("---")
     st.markdown('<div class="rent-tile-label">Fixed regression set (replayed)</div>',
                 unsafe_allow_html=True)
     try:
@@ -815,7 +920,8 @@ elif screen == "4 · Proof":
     st.markdown("---")
     render_receipts(REPLAY_MODE)
 
-else:  # "5 · Autopilot" — closing beat: it does this by itself.
+else:  # "5 · Autopilot" — closing beat: it does this by itself. Audit log leads, run-cycle button follows.
     render_autopilot_panel(REPLAY_MODE)
 
+render_about_expander()   # moved to the bottom of every screen, just above the footer
 render_footer()
