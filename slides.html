@@ -58,6 +58,18 @@
          color:#AEB6C2; letter-spacing:.03em; }
   .team::before{ content:"› "; color:var(--amber); }
 
+  /* slide-1 hero: copy + mascot */
+  .hero{ display:flex; align-items:center; gap:3vw; width:100%; }
+  .hero-copy{ flex:1 1 auto; min-width:0; }
+  .hero-art{ flex:0 0 auto; width:min(38%,360px); }
+  .mascot{ width:100%; height:auto; display:block; }
+  .mascot-img{ width:100%; height:auto; display:block; border-radius:14px;
+               border:1px solid var(--border); box-shadow:0 14px 44px rgba(0,0,0,.55); }
+  @media (max-width:720px){
+    .hero{ flex-direction:column; align-items:flex-start; gap:1.4rem; }
+    .hero-art{ width:min(52vw,200px); align-self:center; }
+  }
+
   /* problem stat chips */
   .chips{ display:flex; gap:1rem; flex-wrap:wrap; margin-top:2rem; }
   .chip{ background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:1rem 1.3rem; }
@@ -150,6 +162,8 @@
 
 <!-- 1 — HOOK + PROBLEM -->
 <section class="slide" data-index="1">
+ <div class="hero">
+  <div class="hero-copy">
   <div class="eyebrow">The memory P&amp;L</div>
   <h1>Larp Rent</h1>
   <div class="team">Team&nbsp;·&nbsp;larp larp larp sahur</div>
@@ -165,6 +179,14 @@
       <div class="k">memories riding along in every prompt — most never earn their seat</div>
     </div>
   </div>
+  </div>
+  <div class="hero-art">
+    <!-- Tung Tung Tung Sahur mascot coding (larp larp larp sahur) -->
+    <img class="mascot-img" src="assets/tung-sahur.jpg" width="760" height="760"
+         alt="Tung Tung Tung Sahur — a wooden log character coding at a desk"
+         loading="eager" decoding="async">
+  </div>
+ </div>
 </section>
 
 <!-- 2 — THE P&L (app screen 1) -->
