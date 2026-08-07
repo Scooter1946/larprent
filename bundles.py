@@ -13,7 +13,7 @@ from snow import get_conn
 
 TOP_K_DEFAULT, OVERFETCH_PAD = 2, 4   # calibrated 2026-08-07: designed seats are rank 1-2, strays rank 3+   # pad only absorbs duplicate episodes of the SAME session; never a backfill source
 # Day-of calibration knob — tune via ledger.get_calibration_report() until the retrieval matrix
-# matches EXPECTED_RETRIEVAL exactly; set via env RENT_MIN_SCORE, no code edit needed. If the score
+# matches EXPECTED_RETRIEVAL exactly; set via env RENT_MIN_REL, no code edit needed. If the score
 # scale makes a fixed threshold awkward, lowering TOP_K_DEFAULT is the fallback.
 MIN_REL = float(os.environ.get("RENT_MIN_REL", "0.75"))   # calibrated 2026-08-07 on keyword scores: designed 2nd seats ratio >=0.81, strays <=0.68
 

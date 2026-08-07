@@ -424,9 +424,11 @@ def _live_prompt(query: str):
     hits = bundles.recall_bundles(query, user_id=USER_ID)   # active-only, no-backfill: [{bundle_id, score, rank}]
     if not hits:
         return None, [], {}
-    # a second recall carries the EverOS-extracted text (recall_bundles drops content); map session->bundle
-    raw = mem.recall(query, user_id=USER_ID, top_k=bundles.TOP_K_DEFAULT + bundles.OVERFETCH_PAD,
-                     min_score=bundles.MIN_SCORE)
+    # a second recall carries the EverOS-extracted text (recall_bundles drops content); map session->bundle.
+    # No min_score here: the gated seat list already came from recall_bundles (client-side relative gate,
+    # MIN_REL) — this call is only a content lookup, and the server-side min_score param is the broken API
+    # (returns empty sets, dry-run finding #2).
+    raw = mem.recall(query, user_id=USER_ID, top_k=bundles.TOP_K_DEFAULT + bundles.OVERFETCH_PAD)
     reg = bundles.get_session_to_bundle_map()
     content_by_bundle = {}
     for ep in raw:
@@ -654,6 +656,53 @@ def render_presenter_cue(screen_name: str) -> None:
                 unsafe_allow_html=True)
 
 
+# Self-explanatory text (plain language, no presenter needed) — one always-visible sentence per
+# screen plus a shared "About this project" expander, so the app stands alone when screenshared,
+# hosted, or opened cold by a judge.
+ABOUT_PROJECT = (
+    "**Rent tracks what an AI assistant's stored memories cost, and what they contribute.**\n\n"
+    "When the assistant answers a question, a few stored memories are included in the prompt as "
+    "context. Every inclusion costs tokens — that cost is the memory's **rent**. When a memory was "
+    "the reason an answer came out correct, it is credited with the tokens it saved compared to "
+    "sending the assistant the entire history — that credit is what it **earned**. The ledger adds "
+    "these up per memory.\n\n"
+    "Memories that keep being included but never help can then be removed. Before any removal "
+    "counts, the same 8-question accuracy test runs again — a removal is only kept if the score is "
+    "unchanged and the cost per question went down. An autopilot can run this find → verify → "
+    "remove → re-verify loop on a schedule, and restores the memories automatically if accuracy "
+    "drops.\n\n"
+    "Stack: EverOS (the memory layer that stores and retrieves memories) · a SQL ledger for every "
+    "call and charge (Snowflake or SQLite) · any LLM for answers. Labels on every number: "
+    "*measured* means it came from the model API's own token counts; *estimated* means it was "
+    "computed with a tokenizer."
+)
+
+SCREEN_EXPLAINERS = {
+    "1 · The P&L": "This table is the ledger: every memory the assistant holds, what it has cost to "
+                    "include in prompts (**rent**), what it saved by making answers correct "
+                    "(**earned**), and the net. Green rows pay for themselves; red rows don't.",
+    "2 · Hire": "Type a fact and it becomes a new stored memory. From now on it can be pulled into "
+                 "prompts — which costs rent — and it starts at $0 earned. Ask the question below "
+                 "to see it retrieved and charged for the first time.",
+    "3 · Fire": "These memories keep being included in prompts but have never contributed to a "
+                 "correct answer. Removing them makes every future prompt smaller and cheaper. "
+                 "Removal is a flag, not a delete — it is reversible.",
+    "4 · Proof": "The same 8-question test, before and after removal: identical score, fewer tokens "
+                  "per question. These results come from a recorded run; the query box below runs "
+                  "against the live system.",
+    "5 · Autopilot": "The find → verify → remove → re-verify loop from the previous screens, run "
+                      "automatically on a schedule. Each line below is one audit cycle; if accuracy "
+                      "had dropped, the removal would have been rolled back and logged.",
+}
+
+
+def render_explainer(screen_name: str) -> None:
+    st.markdown(f'<div class="rent-panel" style="font-size:0.95rem">{SCREEN_EXPLAINERS[screen_name]}</div>',
+                unsafe_allow_html=True)
+    with st.expander("About this project — what Rent does"):
+        st.markdown(ABOUT_PROJECT)
+
+
 def _sidebar_run_info() -> str:
     """Muted sidebar line: run_id / backend / model — model sourced from the pre capture when present,
     falling back to the active LLM (snow.LLM) in skeleton stage before any capture exists."""
@@ -681,6 +730,7 @@ st.markdown(f'<div style="color:{AMBER};font-size:1.1rem;letter-spacing:.14em">R
             f'{"  ·  REPLAY" if REPLAY_MODE else ""}</div>', unsafe_allow_html=True)
 render_odometer(REPLAY_MODE)
 render_presenter_cue(screen)
+render_explainer(screen)
 
 try:
     rows, candidate_ids, idle_ids = load_view(REPLAY_MODE, st.session_state["pruned"])
